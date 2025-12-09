@@ -1,24 +1,39 @@
-name: portfolio-dashboard
+version: '3.8'
+name: mimicare
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: portfolio-db
-    restart: unless-stopped
+  mimicare-db:
+    image: ${IMAGE_REGISTRY:-docker.io/}pgvector/pgvector:pg16
+    pull_policy: ${PULL_POLICY:-missing}
+    container_name: mimicare-db
     ports:
-      - '5432:5432'
+      - '5434:5432'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: portfolio_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123}
+      POSTGRES_DB: ${POSTGRES_DB:-mimicare}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mimicare_db_data:/var/lib/postgresql/data
+      - ./init-scripts/init-pgvector.sql:/docker-entrypoint-initdb.d/init-pgvector.sql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 10s
-      timeout: 5s
       retries: 5
+      timeout: 5s
+      start_period: 10s
+    networks:
+      - mimicare_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
 
 volumes:
-  postgres_data:
+  mimicare_db_data:
     driver: local
+
+networks:
+  mimicare_network:
+    driver: bridge

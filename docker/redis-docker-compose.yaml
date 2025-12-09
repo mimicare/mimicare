@@ -1,21 +1,28 @@
-name: portfolio-dashboard
+version: '3.8'
+name: mimicare
 
 services:
   redis:
-    image: redis:7-alpine
-    container_name: portfolio-redis
-    restart: unless-stopped
+    image: ${IMAGE_REGISTRY:-docker.io/library/}redis:8-alpine
+    pull_policy: ${PULL_POLICY:-missing}
+    container_name: mimicare-redis
     ports:
       - '6379:6379'
-    command: redis-server --appendonly yes
+    command: redis-server --requirepass mimicare123
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    networks:
+      - mimicare_network
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', '-a mimicare123', 'ping']
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
 
 volumes:
-  redis_data:
+  redis-data:
     driver: local
+
+networks:
+  mimicare_network:
+    driver: bridge

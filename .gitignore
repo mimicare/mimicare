@@ -1,7 +1,6 @@
 # Dependencies
 node_modules
-.pnp
-.pnp.js
+.pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -12,35 +11,83 @@ node_modules
 # Build outputs
 dist
 build
-.next
 out
+.next
+.turbo
 *.tsbuildinfo
 
-# Environment
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env*.local
 
-# Prisma
-prisma/migrations
-
 # Logs
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# OS
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE
+# IDE and editor files
 .vscode/*
 !.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 !.vscode/extensions.json
+*.swp
+*.swo
+*~
 .idea
+*.sublime-project
+*.sublime-workspace
 
 # Testing
 coverage
+*.lcov
+.nyc_output
+.jest-cache
 
-# Turbo
-.turbo
+# Prisma
+*.db
+*.db-journal
+prisma/migrations/**/*.sql
+packages/schema/client
+**/prisma/client
+
+docs/context
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+.parcel-cache
+.eslintcache
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Debug
+.vscode-test
+
+# Misc
+.vercel
+.netlify
+.serverless
