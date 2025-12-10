@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0  
 **Last Updated:** December 10, 2025  
-**Purpose:** Local development infrastructure for Mimicare maternal care platform
+**Purpose:** Local development infrastructure for Mimicare care platform
 
 ---
 
