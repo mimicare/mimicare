@@ -1,0 +1,419 @@
+// ==========================================
+// SOCIAL MODELS - Community, Messaging, Appointments, Payments, Audit
+// ==========================================
+
+// ===== INSTAGRAM-STYLE REELS & POSTS =====
+
+model Post {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  authorId String @db.Uuid
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  title    String?      @db.VarChar(255)
+  content  String       @db.Text
+  category PostCategory @default(GENERAL)
+
+  // RICH MEDIA SUPPORT (Instagram-style)
+  mediaType     MediaType @default(TEXT_ONLY)
+  imageUrls     String[]  @default([]) // AWS S3 URLs (Carousel support)
+  thumbnailUrl  String?   @db.Text // Mandatory for VIDEO/REEL
+  videoDuration Int? // Seconds (for UI badges like "1:30")
+
+  isOfficialContent Boolean @default(false)
+
+  viewCount    Int @default(0)
+  likeCount    Int @default(0)
+  commentCount Int @default(0)
+  shareCount   Int @default(0) // NEW: Viral tracking
+
+  status   ModerationStatus @default(PENDING)
+  isPinned Boolean          @default(false)
+
+  // AWS REKOGNITION AUTO-MODERATION
+  // Trigger: S3 upload -> Lambda -> Rekognition -> Update status
+  isAIModerated      Boolean   @default(false)
+  aiModerationResult Json?     @db.JsonB // Store confidence scores
+  aiModerationDate   DateTime? @db.Timestamptz(3)
+
+  contentEmbedding Unsupported("vector(1536)")? // OpenAI ada-002 embedding
+
+  deletedAt DateTime? @db.Timestamptz(3)
+
+  comments        Comment[]
+  likes           Like[]
+  moderationFlags ModerationFlag[]
+
+  @@index([authorId])
+  @@index([category])
+  @@index([mediaType])
+  @@index([createdAt])
+  @@index([status])
+  @@index([viewCount]) // For trending algorithm
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  postId String @db.Uuid
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  authorId String @db.Uuid
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content   String           @db.Text
+  likeCount Int              @default(0)
+  status    ModerationStatus @default(APPROVED)
+
+  deletedAt DateTime? @db.Timestamptz(3)
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  postId String @db.Uuid
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("likes")
+}
+
+model Question {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  askedById String @db.Uuid
+  askedBy   User   @relation(fields: [askedById], references: [id], onDelete: Cascade)
+
+  title       String       @db.VarChar(500)
+  description String       @db.Text
+  category    PostCategory @default(ASK_DOCTOR)
+  tags        String[]     @default([])
+
+  viewCount   Int @default(0)
+  answerCount Int @default(0)
+
+  questionEmbedding Unsupported("vector(1536)")?
+
+  answers Answer[]
+
+  @@index([askedById])
+  @@index([createdAt])
+  @@map("questions")
+}
+
+model Answer {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  questionId String   @db.Uuid
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  answeredById String @db.Uuid
+  answeredBy   User   @relation(fields: [answeredById], references: [id], onDelete: Cascade)
+
+  content String @db.Text
+
+  isDoctorVerifiedAnswer Boolean @default(false)
+  isAcceptedAnswer       Boolean @default(false)
+
+  upvoteCount Int              @default(0)
+  status      ModerationStatus @default(APPROVED)
+
+  @@index([questionId])
+  @@index([answeredById])
+  @@index([isDoctorVerifiedAnswer])
+  @@map("answers")
+}
+
+// ===== CHAT & MESSAGING =====
+
+model Chat {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  // FHIR: Communication.category
+  chatType      ChatType  @default(DIRECT_MESSAGE)
+  title         String?   @db.VarChar(255)
+  lastMessageAt DateTime? @db.Timestamptz(3)
+
+  participants ChatParticipant[]
+  messages     Message[] // TODO: OFFLOAD TO DYNAMODB after MVP
+
+  @@index([chatType])
+  @@index([lastMessageAt])
+  @@map("chats")
+}
+
+model ChatParticipant {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  chatId String @db.Uuid
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Communication.recipient
+  isAdmin              Boolean   @default(false)
+  joinedAt             DateTime  @default(now()) @db.Timestamptz(3)
+  lastReadAt           DateTime? @db.Timestamptz(3)
+  unreadCount          Int       @default(0)
+  notificationsEnabled Boolean   @default(true)
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+  @@map("chat_participants")
+}
+
+// TODO: OFFLOAD TO DYNAMODB - High volume messaging
+// Strategy: Single Table Design
+// PK = chatId, SK = timestamp, TTL = 90 days
+// Use AWS AppSync (GraphQL) + DynamoDB for real-time subscriptions
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  chatId String @db.Uuid
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  senderId String @db.Uuid
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // FHIR: Communication.payload, Communication.sent, Communication.status
+  content       String        @db.Text
+  messageType   MessageType   @default(TEXT)
+  attachmentUrl String?       @db.Text // AWS S3 URL
+  status        MessageStatus @default(SENT)
+
+  sentAt      DateTime  @default(now()) @db.Timestamptz(3)
+  deliveredAt DateTime? @db.Timestamptz(3)
+  readAt      DateTime? @db.Timestamptz(3)
+
+  replyToMessageId String?   @db.Uuid
+  replyToMessage   Message?  @relation("MessageReplies", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies          Message[] @relation("MessageReplies")
+
+  deletedAt DateTime? @db.Timestamptz(3)
+
+  @@index([chatId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ===== TELEMEDICINE APPOINTMENTS =====
+
+model Appointment {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  patientId String @db.Uuid
+  patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+
+  // SAFETY FIX: If doctor is deleted, appointment history remains (Set to Null instead of Cascade)
+  doctorId      String?        @db.Uuid
+  doctorProfile DoctorProfile? @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: SetNull)
+
+  // NEW: Multi-Clinic Support
+  clinicId String? @db.Uuid
+  clinic   Clinic? @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+
+  scheduledAt      DateTime          @db.Timestamptz(3)
+  duration         Int               @default(30)
+  consultationType ConsultationType
+  status           AppointmentStatus @default(SCHEDULED)
+
+  reasonForVisit String? @db.Text
+  patientNotes   String? @db.Text
+  doctorNotes    String? @db.Text
+
+  // Telemedicine Fields
+  videoCallUrl    String?          @db.Text
+  meetingProvider MeetingProvider? @default(AWS_CHIME)
+  meetingId       String?          @db.VarChar(100)
+  recordingUrl    String?          @db.Text
+
+  // Fees & Payment
+  consultationFee Decimal       @db.Decimal(10, 2)
+  currency        String        @default("INR") @db.VarChar(3)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  transactionId   String?       @unique @db.VarChar(255)
+
+  reminderSentAt DateTime? @db.Timestamptz(3)
+
+  logs                AppointmentLog[]
+  prescriptions       Prescription[]
+  paymentTransactions PaymentTransaction[]
+
+  // CONCURRENCY CONTROL
+  // Note: For full "Ghost Slot" protection (ignoring Cancelled bookings),
+  // you must edit the generated migration SQL to add: WHERE "status" != 'CANCELLED'
+  @@unique([doctorId, scheduledAt])
+
+  @@map("appointments")
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([clinicId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+
+model AppointmentLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  appointmentId String      @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  // FHIR: Provenance.activity, Provenance.agent, Provenance.recorded
+  action      AppointmentLogAction
+  performedBy String?              @db.Uuid
+  details     Json?                @db.JsonB
+  timestamp   DateTime             @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId])
+  @@index([timestamp])
+  @@map("appointment_logs")
+}
+
+// ===== PAYMENT TRANSACTION (FIX #3: PAYMENT RELIABILITY) =====
+
+model PaymentTransaction {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  appointmentId String      @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  userId   String  @db.Uuid // Who paid?
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("INR") @db.VarChar(3)
+
+  // Gateway Details (Razorpay/UPI/PhonePe/Stripe)
+  gateway          String  @db.VarChar(50) // "RAZORPAY", "PHONEPE", "STRIPE"
+  gatewayOrderId   String  @db.VarChar(255) // Order ID created before payment
+  gatewayPaymentId String? @unique @db.VarChar(255) // Final payment ID after success
+
+  // Status Tracking (Handles Pending → Failed → Success flows)
+  status        PaymentStatus
+  failureReason String?       @db.Text
+
+  // Audit & Debugging (Store raw webhook/API response)
+  metadata Json? @db.JsonB
+
+  @@index([appointmentId])
+  @@index([gatewayOrderId])
+  @@index([status])
+  @@index([userId])
+  @@map("payment_transactions")
+}
+
+// ===== DOCTOR PAYOUT (NEW: Missing 1%) =====
+
+model DoctorPayout {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  doctorId String        @db.Uuid
+  doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("INR") @db.VarChar(3)
+
+  // Status & Transaction Reference
+  status         PayoutStatus @default(PROCESSING)
+  transactionRef String?      @db.VarChar(255) // Bank UTR number
+
+  // Payout Period (Weekly/Monthly settlements)
+  periodStart DateTime @db.Date // "Payout for Jan 1 - Jan 7"
+  periodEnd   DateTime @db.Date
+
+  // Settlement Details
+  bankAccountLast4 String?   @db.VarChar(4)
+  processedAt      DateTime? @db.Timestamptz(3)
+  failureReason    String?   @db.Text
+
+  notes String? @db.Text
+
+  @@index([doctorId])
+  @@index([status])
+  @@index([periodStart])
+  @@map("doctor_payouts")
+}
+
+model ModerationFlag {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  postId String @db.Uuid
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  reportedById String @db.Uuid
+  reportedBy   User   @relation(fields: [reportedById], references: [id], onDelete: Cascade)
+
+  reason      FlagReason       @default(SPAM)
+  description String?          @db.Text
+  status      ModerationStatus @default(PENDING)
+  reviewedAt  DateTime?        @db.Timestamptz(3)
+  reviewedBy  String?          @db.Uuid // Admin who reviewed
+
+  @@index([postId])
+  @@index([reportedById])
+  @@index([status])
+  @@map("moderation_flags")
+}
+
+// TODO: OFFLOAD TO DYNAMODB - Write-Once-Read-Never (WORN) pattern
+// Strategy: Kinesis Data Firehose -> DynamoDB -> S3 (cold storage)
+// Table Design: PK=entityType#entityId, SK=timestamp, TTL=365 days
+// Use this for compliance & security auditing only
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  // FHIR: AuditEvent.agent, AuditEvent.action, AuditEvent.entity, AuditEvent.recorded
+  userId     String?         @db.Uuid
+  action     AuditAction
+  entityType AuditEntityType
+  entityId   String          @db.Uuid
+  changes    Json?           @db.JsonB
+
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?  @db.Text
+  sessionId String?  @db.Uuid
+  timestamp DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@index([action])
+  @@map("audit_logs")
+}

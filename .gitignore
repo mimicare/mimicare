@@ -1,4 +1,6 @@
-# Dependencies
+# ==========================================
+# DEPENDENCIES
+# ==========================================
 node_modules
 .pnp.*
 .yarn/*
@@ -8,7 +10,9 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 
-# Build outputs
+# ==========================================
+# BUILD OUTPUTS
+# ==========================================
 dist
 build
 out
@@ -16,7 +20,9 @@ out
 .turbo
 *.tsbuildinfo
 
-# Environment variables
+# ==========================================
+# ENVIRONMENT VARIABLES
+# ==========================================
 .env
 .env.local
 .env.development.local
@@ -24,7 +30,9 @@ out
 .env.production.local
 .env*.local
 
-# Logs
+# ==========================================
+# LOGS
+# ==========================================
 logs
 *.log
 npm-debug.log*
@@ -33,7 +41,9 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# OS files
+# ==========================================
+# OS FILES
+# ==========================================
 .DS_Store
 .DS_Store?
 ._*
@@ -43,7 +53,9 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# IDE and editor files
+# ==========================================
+# IDE AND EDITOR FILES
+# ==========================================
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -56,42 +68,67 @@ desktop.ini
 *.sublime-project
 *.sublime-workspace
 
-# Testing
+# ==========================================
+# TESTING
+# ==========================================
 coverage
 *.lcov
 .nyc_output
 .jest-cache
 
-# Prisma
+# ==========================================
+# PRISMA - CRITICAL SECTION
+# ==========================================
+# SQLite databases (if using SQLite for dev)
 *.db
 *.db-journal
-prisma/migrations/**/*.sql
+packages/database/generated
+packages/database/dist
 packages/schema/client
-**/prisma/client
+packages/schema/dist
+**/generated/client
 
-docs/context
+# Legacy/alternative paths
+**/prisma/generated
 
-# Temporary files
+# ==========================================
+# CONTEXT EXPORTS
+# ==========================================
+# Codebase exports for AI/documentation
+data/context/*.md
+docs/context/*.md
+
+# ==========================================
+# TEMPORARY FILES
+# ==========================================
 *.tmp
 *.temp
 .cache
 .parcel-cache
 .eslintcache
 
-# Runtime data
+# ==========================================
+# RUNTIME DATA
+# ==========================================
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Debug
+# ==========================================
+# DEBUG
+# ==========================================
 .vscode-test
 
-# Misc
+# ==========================================
+# DEPLOYMENT
+# ==========================================
 .vercel
 .netlify
 .serverless
 
-
-# Docker
-docker/images
+# ==========================================
+# DOCKER
+# ==========================================
+scripts/docker/*.tar
+scripts/docker/images

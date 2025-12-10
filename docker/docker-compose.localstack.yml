@@ -1,0 +1,70 @@
+version: '3.8'
+name: mimicare
+
+services:
+  mimicare-localstack:
+    image: ${IMAGE_REGISTRY:-docker.io/}localstack/localstack:latest
+    pull_policy: ${PULL_POLICY:-missing}
+    container_name: mimicare-localstack
+    ports:
+      - '4566:4566' # Gateway
+      - '4510-4559:4510-4559' # External services
+    environment:
+      # Core Configuration
+      - SERVICES=s3,dynamodb,ses,sqs,lambda,secretsmanager,sns
+      - DEFAULT_REGION=ap-south-1
+      - AWS_DEFAULT_REGION=ap-south-1
+      - DEBUG=${LOCALSTACK_DEBUG:-0}
+      - PERSISTENCE=${LOCALSTACK_PERSISTENCE:-1}
+
+      # AWS Credentials (for local testing)
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+
+      # Gateway Configuration
+      - GATEWAY_LISTEN=0.0.0.0:4566
+      - EDGE_PORT=4566
+
+      # Service Configuration
+      - DYNAMODB_SHARED_DB=1
+      - EAGER_SERVICE_LOADING=1
+      - LAMBDA_EXECUTOR=docker-reuse
+      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
+
+      # Feature Flags
+      - ENABLE_CONFIG_UPDATES=1
+      - DISABLE_CUSTOM_CORS_S3=0
+      - DISABLE_CUSTOM_CORS_APIGATEWAY=0
+
+      # Volume mounting
+      - DATA_DIR=/var/lib/localstack
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - mimicare_network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  localstack-data:
+    driver: local
+    name: mimicare_localstack_data
+
+networks:
+  mimicare_network:
+    driver: bridge
+    name: mimicare_network

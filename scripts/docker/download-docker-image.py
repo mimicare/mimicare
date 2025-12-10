@@ -2,6 +2,7 @@
 import json
 import os
 import platform
+import shutil
 import sys
 
 import requests
@@ -90,7 +91,13 @@ def download_image(image_name, tag="latest", target_platform=None):
         platform_response.raise_for_status()
         manifest = platform_response.json()
 
-    output_dir = f"{image_name.replace('/', '_')}_{tag}_{arch}"
+    # Create images directory for both temporary files AND final TARs
+    images_base_dir = "images"
+    os.makedirs(images_base_dir, exist_ok=True)
+
+    # Temporary extraction directory inside images/
+    temp_dir_name = f"{image_name.replace('/', '_')}_{tag}_{arch}_temp"
+    output_dir = os.path.join(images_base_dir, temp_dir_name)
     os.makedirs(output_dir, exist_ok=True)
 
     config = manifest.get("config", {})
@@ -157,20 +164,28 @@ def download_image(image_name, tag="latest", target_platform=None):
 
     import tarfile
 
-    tar_filename = f"{image_name.replace('/', '_')}_{tag}_{arch}.tar"
+    # TAR filename INSIDE images/ directory
+    tar_filename = os.path.join(
+        images_base_dir, f"{image_name.replace('/', '_')}_{tag}_{arch}.tar"
+    )
     print(f"\nCreating TAR archive: {tar_filename}")
 
     with tarfile.open(tar_filename, "w") as tar:
         tar.add(output_dir, arcname=".")
 
     print(f"\n✓ TAR created: {tar_filename}")
+
+    # Clean up temporary extraction directory
+    print(f"Cleaning up temporary files: {output_dir}")
+    shutil.rmtree(output_dir)
+
     return True
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python download_image.py <image_name> [tag]")
-        print("Usage: python download_image.py batch <file.txt>")
+        print("Usage: python download-docker-image.py <image_name> [tag]")
+        print("Usage: python download-docker-image.py batch <file.txt>")
         sys.exit(1)
 
     if sys.argv[1] == "batch":

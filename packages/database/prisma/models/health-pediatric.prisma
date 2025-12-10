@@ -1,0 +1,142 @@
+// ==========================================
+// PEDIATRIC HEALTH MODELS - Child Care (Age 0-18 Years)
+// ==========================================
+
+model ChildProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  parentId String @db.Uuid
+  parent   User   @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+
+  // FHIR: Patient.name, Patient.gender, Patient.birthDate
+  name        String    @db.VarChar(255)
+  dateOfBirth DateTime  @db.Date
+  timeOfBirth DateTime? @db.Time
+  gender      Gender
+  bloodGroup  String?   @db.VarChar(5)
+
+  // FHIR: Patient.identifier
+  abhaNumber String? @unique @db.VarChar(20)
+
+  // Birth Details
+  birthWeight       Decimal? @db.Decimal(5, 2)
+  birthLength       Decimal? @db.Decimal(5, 2)
+  headCircumference Decimal? @db.Decimal(5, 2)
+  apgarScore        Int?
+
+  // FIX #1: TWINS/MULTIPLES - Inverted Relationship
+  pregnancyJourneyId String?           @db.Uuid
+  pregnancyJourney   PregnancyJourney? @relation(fields: [pregnancyJourneyId], references: [id], onDelete: SetNull)
+
+  // FHIR: AllergyIntolerance, Condition
+  allergies         String[] @default([])
+  chronicConditions String[] @default([])
+
+  photoUrl String? @db.Text // AWS S3 URL
+  notes    String? @db.Text
+
+  // Relations
+  growthRecords      GrowthRecord[]
+  vaccinationRecords VaccinationRecord[]
+  milestones         MilestoneRecord[]
+
+  @@index([parentId])
+  @@index([dateOfBirth])
+  @@index([pregnancyJourneyId])
+  @@map("child_profiles")
+}
+
+model GrowthRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  childId String       @db.Uuid
+  child   ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectiveDateTime
+  recordedAt DateTime @db.Timestamptz(3)
+
+  // FHIR: Observation.valueQuantity
+  height            Decimal? @db.Decimal(5, 2)
+  weight            Decimal? @db.Decimal(5, 2)
+  headCircumference Decimal? @db.Decimal(5, 2)
+  bmi               Decimal? @db.Decimal(4, 1)
+
+  // FHIR: Observation.referenceRange
+  percentileHeight Int?
+  percentileWeight Int?
+  percentileBMI    Int?
+
+  ageInMonths Int?
+  source      String? @db.VarChar(100)
+  notes       String? @db.Text
+
+  @@index([childId, recordedAt])
+  @@index([recordedAt])
+  @@map("growth_records")
+}
+
+model VaccinationRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  childId String       @db.Uuid
+  child   ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // FHIR: Immunization.vaccineCode
+  vaccineName String @db.VarChar(100)
+  doseNumber  Int    @default(1)
+
+  // FHIR: Immunization.status, Immunization.occurrenceDateTime
+  status           VaccineStatus @default(UPCOMING)
+  scheduledDate    DateTime      @db.Date
+  administeredDate DateTime?     @db.Date
+
+  // FHIR: Immunization.lotNumber, Immunization.performer
+  batchNumber    String? @db.VarChar(50)
+  administeredBy String? @db.VarChar(255)
+  location       String? @db.VarChar(255)
+
+  // FHIR: Immunization.reaction
+  hasReaction      Boolean @default(false)
+  reactionDetails  String? @db.Text
+  reactionSeverity String? @db.VarChar(50)
+
+  notes String? @db.Text
+
+  @@index([childId, scheduledDate])
+  @@index([status])
+  @@index([vaccineName])
+  @@map("vaccination_records")
+}
+
+model MilestoneRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  childId String       @db.Uuid
+  child   ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation (Developmental)
+  milestoneName String            @db.VarChar(255)
+  category      MilestoneCategory
+
+  // FHIR: Observation.effectiveDateTime
+  achievedAt  DateTime @db.Date
+  ageInMonths Decimal? @db.Decimal(4, 1)
+
+  isDelayed Boolean @default(false)
+  isEarly   Boolean @default(false)
+
+  mediaUrls String[] @default([]) // AWS S3 URLs for photos/videos
+  notes     String?  @db.Text
+
+  @@index([childId, achievedAt])
+  @@index([category])
+  @@index([isDelayed])
+  @@map("milestone_records")
+}

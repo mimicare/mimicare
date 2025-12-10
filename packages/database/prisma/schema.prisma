@@ -1,23 +1,42 @@
+// ==========================================
+// MIMICARE - Main Prisma Schema Configuration
+// ==========================================
+// Maternal & Child Health Platform for India
+// Flutter (Frontend) + NestJS (Backend) + PostgreSQL
+//
+// AWS-OPTIMIZED ARCHITECTURE:
+// - PostgreSQL (RDS Aurora): Relational health data
+// - DynamoDB: High-volume logs, chat, activity streams
+// - S3: Media storage (images, videos, documents)
+// - Rekognition: Content moderation
+// - Bedrock: AI chatbot (Claude 3.5)
+// - MediaConvert: Video processing (Reels)
+// ==========================================
+
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/client"
+  provider      = "prisma-client"
+  output        = "./generated/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
+  // URL is now configured in prisma.config.ts
+
+  // TODO: Enable pgvector extension for AI-powered features
+  // Run migration: CREATE EXTENSION IF NOT EXISTS vector;
+  // This enables:
+  // - Similar post recommendations
+  // - Semantic search for medical Q&A
+  // - RAG (Retrieval Augmented Generation) for AI chatbot
+  // Uncomment after running the extension migration:
+  // extensions = [vector]
 }
 
-model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  name          String
-  phone         String?
-  password      String
-  role          String   @default("patient")
-  dueDate       DateTime?
-  weeksPregnant Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@map("users")
-}
+// ==========================================
+// MODEL IMPORTS
+// ==========================================
+// Prisma will automatically include all .prisma files
+// in the prisma/ directory and subdirectories
+// Models are organized in the models/ subdirectory
+// ==========================================

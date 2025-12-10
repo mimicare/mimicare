@@ -1,0 +1,292 @@
+// ==========================================
+// USER MODELS - Authentication, Profile, Doctor, Clinic
+// ==========================================
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  // Basic Profile
+  // FHIR: Patient.name, Patient.photo, Patient.gender
+  name              String?
+  profilePictureUrl String?   @db.Text // AWS S3 presigned URLs can be very long
+  dateOfBirth       DateTime? @db.Date // FHIR: Patient.birthDate
+  gender            Gender? // FHIR: Patient.gender
+  role              UserRole  @default(PATIENT)
+  isVerified        Boolean   @default(false)
+  isActive          Boolean   @default(true)
+
+  // Multi-Method Authentication
+  // FHIR: Patient.telecom
+  email           String?      @unique @db.VarChar(255)
+  passwordHash    String?      @db.VarChar(255)
+  phoneNumber     String?      @db.VarChar(15) // Uniqueness enforced via composite constraint
+  countryCode     CountryCode? @default(IN)
+  isPhoneVerified Boolean      @default(false)
+  googleId        String?      @unique @db.VarChar(255)
+
+  // ABDM/ABHA Integration
+  // FHIR: Patient.identifier
+  abhaAddress String? @unique @db.VarChar(50)
+  abhaId      String? @unique @db.VarChar(14)
+
+  // Gamification
+  points               Int       @default(0)
+  dailyLoginStreak     Int       @default(0)
+  lastStreakUpdateDate DateTime? @db.Date
+
+  // Timestamps
+  lastLoginAt DateTime? @db.Timestamptz(3)
+  deletedAt   DateTime? @db.Timestamptz(3)
+
+  // Relations
+  settings      UserSetting?
+  activityLogs  UserActivityLog[] // TODO: OFFLOAD TO DYNAMODB after 50k users
+  doctorProfile DoctorProfile?
+
+  // === REPRODUCTIVE HEALTH ===
+  reproductiveProfile ReproductiveProfile?
+  dailyHealthLogs     DailyHealthLog[]
+  cyclePredictions    CyclePrediction[]
+
+  // === MATERNITY ===
+  pregnancyJourneys     PregnancyJourney[]
+  journeyParticipations JourneyParticipant[]
+  vitalsRecords         VitalsRecord[]
+  periodCycles          PeriodCycle[]
+
+  // === PARENTING ===
+  children ChildProfile[] @relation("ParentChildren")
+
+  // === RELATIONSHIPS ===
+  initiatedRelationships UserRelationship[] @relation("RelationshipRequester")
+  receivedRelationships  UserRelationship[] @relation("RelationshipAccepter")
+  emergencyContacts      EmergencyContact[] @relation("UserEmergencyContacts")
+
+  // === TELEMEDICINE ===
+  medicalDocuments MedicalDocument[]
+  prescriptions    Prescription[]
+
+  // === ENGAGEMENT ===
+  contentReads            ContentReadLog[]
+  notificationPreferences NotificationPreference[] // TODO: OFFLOAD TO DYNAMODB
+  shoppingListItems       ShoppingListItem[]
+
+  // === SOCIAL & COMPLIANCE ===
+  abdmConsents       AbdmConsent[]
+  posts              Post[]
+  comments           Comment[]
+  likes              Like[]
+  questions          Question[]
+  answers            Answer[]
+  appointments       Appointment[]     @relation("PatientAppointments")
+  moderationFlags    ModerationFlag[]
+  sentMessages       Message[]         @relation("MessageSender") // TODO: OFFLOAD TO DYNAMODB
+  chatParticipations ChatParticipant[]
+
+  @@unique([countryCode, phoneNumber], name: "unique_phone_per_country")
+  @@index([email])
+  @@index([phoneNumber])
+  @@index([abhaAddress])
+  @@index([role])
+  @@index([gender])
+  @@map("users")
+}
+
+model UserSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // UX Customization
+  preferredLanguage PreferredLanguage @default(ENGLISH)
+  theme             Theme             @default(SYSTEM)
+  lifeStage         LifeStage?
+
+  // Notification Preferences
+  emailNotifications     Boolean @default(true)
+  pushNotifications      Boolean @default(true)
+  appointmentReminders   Boolean @default(true)
+  vitalsReminders        Boolean @default(true)
+  weeklyPregnancyUpdates Boolean @default(true)
+  messageNotifications   Boolean @default(true)
+  vaccinationReminders   Boolean @default(true)
+  milestoneNotifications Boolean @default(true)
+
+  // Privacy Settings
+  guardianModeEnabled Boolean @default(false)
+
+  @@index([userId])
+  @@map("user_settings")
+}
+
+// TODO: OFFLOAD TO DYNAMODB - High-volume write, low read
+// Strategy: Use Kinesis Data Firehose to stream to DynamoDB
+// Table Design: PK=userId, SK=timestamp, TTL=90 days
+model UserActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId       String       @db.Uuid
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityType ActivityType
+  details      Json?        @db.JsonB
+
+  @@index([userId, activityType])
+  @@index([createdAt])
+  @@map("user_activity_logs")
+}
+
+// ==========================================
+// DOCTOR & CLINIC - MANY-TO-MANY RELATIONSHIP
+// ==========================================
+
+model Clinic {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  // FHIR: Organization
+  name    String  @db.VarChar(255)
+  address String  @db.Text
+  city    String  @db.VarChar(100)
+  state   String  @db.VarChar(100)
+  pincode String  @db.VarChar(10)
+  phone   String? @db.VarChar(15)
+
+  // Media
+  logoUrl String?  @db.Text
+  photos  String[] @default([])
+
+  // RELATIONS
+  // A clinic has many doctor affiliations
+  doctorAffiliations DoctorClinicRegistry[]
+
+  // A clinic hosts many appointments
+  appointments Appointment[]
+
+  // A clinic has specific availability slots defined by doctors
+  doctorAvailabilities DoctorAvailability[]
+
+  @@index([city])
+  @@index([name])
+  @@map("clinics")
+}
+
+model DoctorProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Practitioner
+  registrationNumber String               @unique @db.VarChar(50)
+  councilName        MedicalCouncil
+  licenseExpiryDate  DateTime?            @db.Date
+  specialization     DoctorSpecialization
+  qualifications     String[]             @default([])
+  experienceYears    Int?
+
+  // Verification
+  isVerified Boolean   @default(false)
+  verifiedAt DateTime? @db.Timestamptz(3)
+  verifiedBy String?   @db.Uuid
+
+  // Bio & Social
+  bio             String? @db.Text
+  websiteUrl      String? @db.Text
+  instagramHandle String? @db.VarChar(100)
+  youtubeChannel  String? @db.Text
+  linkedinProfile String? @db.Text
+
+  // RELATIONS
+
+  // REMOVED: clinicId (The 1:1 relationship)
+  // ADDED: N:M Relationship via Registry
+  clinicAffiliations DoctorClinicRegistry[]
+
+  // Aggregated Stats
+  totalConsultations Int      @default(0)
+  averageRating      Decimal? @db.Decimal(3, 2)
+  totalReviews       Int      @default(0)
+
+  // Transactional Relations
+  appointments      Appointment[]        @relation("DoctorAppointments")
+  prescriptions     Prescription[]       @relation("DoctorPrescriptions")
+  uploadedDocuments MedicalDocument[]    @relation("DoctorUploads")
+  availabilities    DoctorAvailability[]
+  payouts           DoctorPayout[]
+
+  @@index([registrationNumber])
+  @@index([isVerified])
+  @@index([specialization])
+  @@map("doctor_profiles")
+}
+
+// NEW INTERMEDIATE MODEL
+// This handles: "Dr. Anbu visits Apollo Hospital on Mon/Wed and charges 500,
+// but visits Cloudnine on Fri and charges 1000"
+model DoctorClinicRegistry {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  doctorId String        @db.Uuid
+  doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  clinicId String @db.Uuid
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  // ATTRIBUTES SPECIFIC TO THIS CLINIC
+  consultationFee Decimal @db.Decimal(10, 2) // Fee at THIS clinic
+  currency        String  @default("INR") @db.VarChar(3)
+
+  // Does he do Video here? Or only In-Person?
+  consultationTypes ConsultationType[]
+
+  // e.g., "Visiting Consultant", "Resident Doctor", "Director"
+  roleInClinic String? @db.VarChar(100)
+
+  isPrimaryClinic Boolean @default(false)
+
+  @@unique([doctorId, clinicId]) // Prevent duplicate linking
+  @@index([doctorId])
+  @@index([clinicId])
+  @@map("doctor_clinic_registries")
+}
+
+model DoctorAvailability {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  doctorId String        @db.Uuid
+  doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  // Clinic is now largely MANDATORY for availability (unless it's 100% remote/home)
+  clinicId String? @db.Uuid
+  clinic   Clinic? @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  // Schedule Definition (0=Sunday, 1=Monday, ..., 6=Saturday)
+  dayOfWeek Int // 0-6
+  startTime DateTime @db.Time // e.g., 10:00 AM
+  endTime   DateTime @db.Time // e.g., 02:00 PM
+
+  // Slot Configuration (Might be 10 mins at Gov hospital, 30 mins at Private)
+  slotDuration Int @default(15)
+
+  isAvailable Boolean @default(true)
+
+  effectiveFrom DateTime? @db.Date
+  effectiveTo   DateTime? @db.Date
+
+  @@index([doctorId, dayOfWeek])
+  @@index([clinicId])
+  @@map("doctor_availability")
+}

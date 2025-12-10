@@ -1,0 +1,37 @@
+version: '3.8'
+name: mimicare
+
+services:
+  # PostgreSQL 17 with pgvector
+  db:
+    extends:
+      file: docker-compose.db.yml
+      service: mimicare-db
+
+  # Redis 8
+  redis:
+    extends:
+      file: docker-compose.redis.yml
+      service: mimicare-redis
+
+  # LocalStack (AWS emulation)
+  localstack:
+    extends:
+      file: docker-compose.localstack.yml
+      service: mimicare-localstack
+
+volumes:
+  mimicare_db_data:
+    external: false
+    name: mimicare_postgres_data
+  redis-data:
+    external: false
+    name: mimicare_redis_data
+  localstack-data:
+    external: false
+    name: mimicare_localstack_data
+
+networks:
+  mimicare_network:
+    driver: bridge
+    name: mimicare_network

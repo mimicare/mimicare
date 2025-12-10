@@ -1,0 +1,124 @@
+// ==========================================
+// REPRODUCTIVE HEALTH - Advanced Fertility & Cycle Tracking
+// ==========================================
+
+model ReproductiveProfile {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Cycle Characteristics
+  // FHIR: Observation (Menstrual Cycle Characteristics)
+  isIrregular        Boolean  @default(false)
+  averageCycleLength Decimal? @db.Decimal(4, 1)
+  shortestCycle      Int?
+  longestCycle       Int?
+
+  // Diagnosed Conditions
+  // FHIR: Condition
+  diagnosedConditions ReproductiveCondition[] @default([NONE])
+  diagnosisDate       DateTime?               @db.Date
+  treatingDoctorId    String?                 @db.Uuid
+
+  // Medication
+  isOnBirthControl       Boolean @default(false)
+  birthControlType       String? @db.VarChar(100)
+  isOnFertilityTreatment Boolean @default(false)
+
+  // Lifestyle Factors
+  smokingStatus      String? @db.VarChar(50)
+  alcoholConsumption String? @db.VarChar(50)
+  stressLevel        String? @db.VarChar(50)
+
+  @@index([userId])
+  @@map("reproductive_profiles")
+}
+
+model DailyHealthLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectiveDateTime
+  logDate DateTime @db.Date
+
+  // Physical Symptoms
+  // FHIR: Observation.valueCodeableConcept
+  flowType      FlowType?
+  cervicalMucus CervicalMucus?
+  painLevel     PainLevel?
+  painLocations String[]       @default([])
+
+  // Basal Body Temperature
+  // FHIR: Observation.valueQuantity
+  basalBodyTemp Decimal? @db.Decimal(4, 2)
+
+  // Emotional/Mental Health
+  // FHIR: Observation (Mental Status)
+  mood         MoodLevel?
+  energyLevel  Int?
+  sleepQuality Int?
+  sleepHours   Decimal?   @db.Decimal(3, 1)
+
+  // Menopause Symptoms
+  // FHIR: Observation.component
+  menopauseSymptoms MenopauseSymptom[] @default([])
+
+  // Sexual Activity
+  hadIntercourse Boolean @default(false)
+  usedProtection Boolean @default(false)
+
+  // Lifestyle
+  waterIntake     Int?
+  exerciseMinutes Int?
+  exerciseType    String? @db.VarChar(100)
+
+  notes String? @db.Text
+
+  @@unique([userId, logDate])
+  @@index([userId, logDate])
+  @@index([logDate])
+  @@map("daily_health_logs")
+}
+
+model CyclePrediction {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Prediction Dates
+  // FHIR: RiskAssessment.occurrencePeriod
+  predictedStartDate     DateTime  @db.Date
+  predictedOvulationDate DateTime? @db.Date
+  predictedEndDate       DateTime? @db.Date
+
+  // Actual Dates
+  actualStartDate     DateTime? @db.Date
+  actualOvulationDate DateTime? @db.Date
+  actualEndDate       DateTime? @db.Date
+
+  // Confidence & Accuracy
+  confidenceLevel  Int? // 0-100%
+  predictionMethod String @db.VarChar(100)
+
+  // Fertility Window
+  fertilityWindowStart DateTime? @db.Date
+  fertilityWindowEnd   DateTime? @db.Date
+
+  // Accuracy Tracking
+  startDateError     Int?
+  ovulationDateError Int?
+
+  @@index([userId, predictedStartDate])
+  @@index([predictedStartDate])
+  @@map("cycle_predictions")
+}

@@ -1,0 +1,47 @@
+version: '3.8'
+name: mimicare
+
+services:
+  mimicare-redis:
+    image: ${IMAGE_REGISTRY:-docker.io/}library/redis:8-alpine
+    pull_policy: ${PULL_POLICY:-missing}
+    container_name: mimicare-redis
+    ports:
+      - '6379:6379'
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-mimicare123}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis-data:/data
+    networks:
+      - mimicare_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-mimicare123}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  redis-data:
+    driver: local
+    name: mimicare_redis_data
+
+networks:
+  mimicare_network:
+    driver: bridge
+    name: mimicare_network

@@ -1,0 +1,183 @@
+// ==========================================
+// MATERNITY HEALTH MODELS - Pregnancy, Vitals, Period Tracking
+// ==========================================
+
+model PregnancyJourney {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Pregnancy Timeline
+  // FHIR: Condition.onsetDateTime, Condition.abatementDateTime
+  lmpDate              DateTime? @db.Date
+  eddDate              DateTime? @db.Date
+  pregnancyConfirmedAt DateTime? @db.Timestamptz(3)
+
+  // Status & Risk
+  // FHIR: Condition.clinicalStatus, Condition.severity, Condition.code
+  status          PregnancyStatus    @default(PREGNANT)
+  riskLevel       PregnancyRiskLevel @default(LOW)
+  highRiskFactors String[]           @default([])
+
+  // Outcome Tracking
+  // FHIR: Procedure.performedDateTime, Procedure.outcome
+  deliveryDate     DateTime?       @db.Date
+  deliveryMethod   DeliveryMethod?
+  outcome          DeliveryOutcome @default(ONGOING)
+  birthWeight      Decimal?        @db.Decimal(5, 2)
+  gestationalWeeks Int?
+
+  // FIX #1: TWINS/MULTIPLES - One-to-Many Relationship
+  childrenOutcome ChildProfile[] // Supports Twins/Triplets/etc.
+
+  notes String? @db.Text
+
+  // Relations
+  participants   JourneyParticipant[]
+  fetalMovements FetalMovementRecord[]
+
+  @@index([userId])
+  @@index([eddDate])
+  @@index([status])
+  @@map("pregnancy_journeys")
+}
+
+model JourneyParticipant {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  journeyId String           @db.Uuid
+  journey   PregnancyJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  participantId String @db.Uuid
+  participant   User   @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // FHIR: CareTeam.participant
+  role       String    @db.VarChar(50)
+  canEdit    Boolean   @default(false)
+  canViewAll Boolean   @default(true)
+  invitedBy  String    @db.Uuid
+  invitedAt  DateTime  @default(now()) @db.Timestamptz(3)
+  acceptedAt DateTime? @db.Timestamptz(3)
+
+  @@unique([journeyId, participantId])
+  @@index([journeyId])
+  @@index([participantId])
+  @@map("journey_participants")
+}
+
+model VitalsRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectiveDateTime, Observation.performer
+  recordedAt DateTime     @db.Timestamptz(3)
+  source     VitalsSource @default(MANUAL_ENTRY)
+
+  // Maternal Vitals
+  // FHIR: Observation.component, Observation.valueQuantity
+  systolicBP       Int?
+  diastolicBP      Int?
+  heartRate        Int?
+  weight           Decimal? @db.Decimal(5, 2)
+  oxygenSaturation Decimal? @db.Decimal(5, 2)
+  glucoseLevel     Decimal? @db.Decimal(5, 2)
+
+  // Fetal Vitals
+  // FHIR: Observation.focus, Observation.valueQuantity
+  fetalHeartRate Int?
+  fundalHeight   Decimal? @db.Decimal(4, 1)
+
+  // Context & Symptom Reporting
+  gestationalWeek  Int?
+  symptomsReported Boolean  @default(false)
+  symptomDetails   String[] @default([])
+
+  notes          String? @db.Text
+  alertGenerated Boolean @default(false)
+
+  @@index([userId, recordedAt])
+  @@index([recordedAt])
+  @@map("vitals_records")
+}
+
+model FetalMovementRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  journeyId String           @db.Uuid
+  journey   PregnancyJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectiveDateTime
+  recordedAt DateTime @db.Timestamptz(3)
+
+  notes String? @db.Text
+
+  @@index([journeyId, recordedAt])
+  @@map("fetal_movement_records")
+}
+
+model PeriodCycle {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectivePeriod
+  startDate      DateTime  @db.Date
+  endDate        DateTime? @db.Date
+  cycleLength    Int?
+  periodDuration Int?
+
+  // Flow & Fertility Tracking
+  flowIntensity        PeriodFlowIntensity?
+  symptomsAndMood      String[]             @default([])
+  cervicalMucus        CervicalMucus?
+  basalBodyTemperature Decimal?             @db.Decimal(4, 2)
+
+  notes String? @db.Text
+
+  @@index([userId, startDate])
+  @@map("period_cycles")
+}
+
+model AbdmConsent {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Consent.identifier, Consent.status
+  consentHandle     String            @unique @db.VarChar(255)
+  status            AbdmConsentStatus @default(REQUESTED)
+  consentArtefactId String?           @db.VarChar(255)
+
+  // FHIR: Consent.dateTime, Consent.period
+  requestedAt DateTime  @default(now()) @db.Timestamptz(3)
+  grantedAt   DateTime? @db.Timestamptz(3)
+  validFrom   DateTime? @db.Timestamptz(3)
+  validUntil  DateTime? @db.Timestamptz(3)
+  revokedAt   DateTime? @db.Timestamptz(3)
+
+  // FHIR: Consent.purpose, Consent.provision.data
+  purpose   String   @db.Text
+  dataTypes String[] @default([])
+  hipId     String?  @db.VarChar(100)
+
+  @@index([userId])
+  @@index([consentHandle])
+  @@index([status])
+  @@map("abdm_consents")
+}

@@ -3,7 +3,7 @@ name: mimicare
 
 services:
   mimicare-db:
-    image: ${IMAGE_REGISTRY:-docker.io/}pgvector/pgvector:pg16
+    image: ${IMAGE_REGISTRY:-docker.io/}pgvector/pgvector:pg17
     pull_policy: ${PULL_POLICY:-missing}
     container_name: mimicare-db
     ports:
@@ -12,11 +12,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123}
       POSTGRES_DB: ${POSTGRES_DB:-mimicare}
+      TZ: UTC
+      PGTZ: UTC
     volumes:
       - mimicare_db_data:/var/lib/postgresql/data
-      - ./init-scripts/init-pgvector.sql:/docker-entrypoint-initdb.d/init-pgvector.sql
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mimicare}']
       interval: 10s
       retries: 5
       timeout: 5s
@@ -27,13 +29,18 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
           memory: 512M
 
 volumes:
   mimicare_db_data:
     driver: local
+    name: mimicare_postgres_data
 
 networks:
   mimicare_network:
     driver: bridge
+    name: mimicare_network

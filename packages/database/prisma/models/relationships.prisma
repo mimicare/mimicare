@@ -1,0 +1,86 @@
+// ==========================================
+// RELATIONSHIPS - Partner, Guardian, Family Unit
+// ==========================================
+
+model UserRelationship {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  // FHIR: RelatedPerson
+  requesterId String @db.Uuid
+  requester   User   @relation("RelationshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  accepterId String @db.Uuid
+  accepter   User   @relation("RelationshipAccepter", fields: [accepterId], references: [id], onDelete: Cascade)
+
+  // FHIR: RelatedPerson.relationship
+  relationType RelationType
+
+  status      String    @default("PENDING") @db.VarChar(20)
+  requestedAt DateTime  @default(now()) @db.Timestamptz(3)
+  acceptedAt  DateTime? @db.Timestamptz(3)
+  declinedAt  DateTime? @db.Timestamptz(3)
+
+  // Permissions (Granular access control)
+  canViewFertilityData Boolean @default(false)
+  canViewPregnancyData Boolean @default(false)
+  canViewChildData     Boolean @default(false)
+  canViewPeriodDetails Boolean @default(false)
+  canViewVitals        Boolean @default(false)
+  canBookAppointments  Boolean @default(false)
+  canReceiveAlerts     Boolean @default(false)
+
+  // Guardian-Specific (for PUBERTY LifeStage)
+  canViewPrivateContent Boolean   @default(false)
+  guardianshipEndDate   DateTime? @db.Date
+
+  @@unique([requesterId, accepterId])
+  @@index([requesterId])
+  @@index([accepterId])
+  @@index([relationType])
+  @@map("user_relationships")
+}
+
+model EmergencyContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation("UserEmergencyContacts", fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String @db.VarChar(255)
+  phoneNumber  String @db.VarChar(15)
+  relationship String @db.VarChar(50)
+  priority     Int    @default(1)
+
+  alertViaSMS      Boolean @default(true)
+  alertViaWhatsApp Boolean @default(false)
+  alertViaCall     Boolean @default(false)
+
+  @@index([userId])
+  @@index([priority])
+  @@map("emergency_contacts")
+}
+
+model EmergencyAlert {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId String @db.Uuid
+
+  emergencyType EmergencyType
+  triggeredAt   DateTime      @default(now()) @db.Timestamptz(3)
+  location      String?       @db.Text // GPS coordinates or address
+
+  alertsSent Int       @default(0)
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime? @db.Timestamptz(3)
+
+  notes String? @db.Text
+
+  @@index([userId])
+  @@index([triggeredAt])
+  @@map("emergency_alerts")
+}

@@ -1,0 +1,78 @@
+// ==========================================
+// ENGAGEMENT - Notifications, Learning, Shopping
+// ==========================================
+
+// TODO: OFFLOAD TO DYNAMODB - Low read, notification state management
+// Strategy: Single Table Design - PK=userId, SK=notificationType
+model NotificationPreference {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  notificationType NotificationType
+
+  enablePush     Boolean @default(true)
+  enableEmail    Boolean @default(false)
+  enableSMS      Boolean @default(false)
+  enableWhatsApp Boolean @default(false)
+
+  preferredTime  DateTime? @db.Time
+  frequency      String?   @db.VarChar(50)
+  isSmartEnabled Boolean   @default(true)
+
+  @@unique([userId, notificationType])
+  @@index([userId])
+  @@map("notification_preferences")
+}
+
+model ContentReadLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  contentId       String            @db.Uuid
+  contentTitle    String            @db.VarChar(500)
+  contentCategory ContentCategory
+  difficulty      ContentDifficulty
+
+  readDuration     Int?
+  completedReading Boolean @default(false)
+  pointsEarned     Int     @default(0)
+
+  readDuringLifeStage LifeStage?
+
+  @@index([userId])
+  @@index([contentCategory])
+  @@map("content_read_logs")
+}
+
+model ShoppingListItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemName    String  @db.VarChar(255)
+  category    String  @db.VarChar(100)
+  quantity    Int     @default(1)
+  isPurchased Boolean @default(false)
+
+  estimatedCost Decimal?  @db.Decimal(10, 2)
+  actualCost    Decimal?  @db.Decimal(10, 2)
+  currency      String    @default("INR") @db.VarChar(3)
+  purchasedAt   DateTime? @db.Date
+
+  priority Int     @default(3)
+  notes    String? @db.Text
+
+  @@index([userId])
+  @@index([isPurchased])
+  @@map("shopping_list_items")
+}

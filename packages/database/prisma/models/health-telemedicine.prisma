@@ -1,0 +1,84 @@
+// ==========================================
+// TELEMEDICINE - Prescriptions, Lab Reports, Documents
+// ==========================================
+
+model Prescription {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  patientId String @db.Uuid
+  patient   User   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId      String?        @db.Uuid
+  doctor        DoctorProfile? @relation("DoctorPrescriptions", fields: [doctorId], references: [id], onDelete: SetNull)
+  appointmentId String?        @db.Uuid
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  // FHIR: MedicationRequest
+  medicationName String              @db.VarChar(255)
+  dosage         String              @db.VarChar(100)
+  frequency      MedicationFrequency
+  duration       Int?
+  instructions   String?             @db.Text
+
+  // FHIR: MedicationRequest.status, MedicationRequest.authoredOn
+  status         PrescriptionStatus @default(ACTIVE)
+  prescribedDate DateTime           @default(now()) @db.Date
+  startDate      DateTime?          @db.Date
+  endDate        DateTime?          @db.Date
+
+  // ABDM Compliance (Digital Signature)
+  isDigitallySigned Boolean @default(false)
+  signatureUrl      String? @db.Text // AWS S3 URL
+
+  refillsAllowed Int? @default(0)
+  refillsUsed    Int  @default(0)
+
+  notes String? @db.Text
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@map("prescriptions")
+}
+
+model MedicalDocument {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: DocumentReference
+  documentType MedicalDocumentType
+  title        String              @db.VarChar(255)
+  documentDate DateTime?           @db.Date
+
+  // Storage (AWS S3)
+  s3Url    String  @db.Text // Long presigned URLs
+  fileName String  @db.VarChar(255)
+  fileSize Int?
+  mimeType String? @db.VarChar(100)
+
+  // Upload Context
+  uploadedBy       String         @db.Uuid
+  uploadedByDoctor String?        @db.Uuid
+  doctorUploader   DoctorProfile? @relation("DoctorUploads", fields: [uploadedByDoctor], references: [id], onDelete: SetNull)
+
+  // OCR & AI Extraction (AWS Textract/Rekognition)
+  isOCRProcessed Boolean @default(false)
+  extractedData  Json?   @db.JsonB
+
+  // Sharing
+  sharedWithDoctors String[] @default([])
+  isPublic          Boolean  @default(false)
+
+  notes String? @db.Text
+
+  @@index([userId])
+  @@index([documentType])
+  @@index([documentDate])
+  @@map("medical_documents")
+}

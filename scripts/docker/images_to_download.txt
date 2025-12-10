@@ -1,0 +1,13 @@
+# ==========================================
+# MIMICARE - Required Docker Images
+# ==========================================
+# Format: image_name:tag
+
+# Database - PostgreSQL 17 with pgvector 0.8.0
+pgvector/pgvector:pg17
+
+# Cache & Session Store - Redis 8 (latest stable)
+redis:8-alpine
+
+# AWS Local Development Stack
+localstack/localstack:latest
