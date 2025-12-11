@@ -29,8 +29,8 @@
     "test:cov": "turbo run test:cov",
     "test:backend": "yarn workspace @mimicare/backend test",
     "test:e2e": "yarn workspace @mimicare/backend test:e2e",
-    "clean": "turbo run clean && rimraf .turbo",
-    "clean:all": "yarn clean && rimraf **/node_modules **/.turbo **/dist **/generated",
+    "clean": "turbo run clean && rimraf node_modules .turbo",
+    "clean:all": "yarn clean && rimraf **/node_modules **/.turbo **/dist",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
     "db:generate": "yarn workspace @mimicare/schema db:generate",
@@ -120,17 +120,26 @@
     "upgrade": "yarn dlx npm-check-updates -u && yarn install"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^22.10.2",
     "dotenv-cli": "^11.0.0",
+    "eslint": "^9.17.0",
     "husky": "^9.1.7",
     "prettier": "^3.7.4",
     "rimraf": "^6.1.2",
     "turbo": "^2.6.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.7.2"
   },
   "packageManager": "yarn@4.12.0",
   "engines": {
     "node": ">=20.0.0",
     "yarn": ">=4.0.0"
+  },
+  "resolutions": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "turbo": "^2.6.3",
+    "typescript": "^5.7.2",
+    "eslint": "^9.17.0",
+    "@types/node": "^22.10.2"
   }
 }

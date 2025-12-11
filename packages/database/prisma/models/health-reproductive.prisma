@@ -3,11 +3,11 @@
 // ==========================================
 
 model ReproductiveProfile {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @unique @db.Uuid
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Cycle Characteristics
@@ -21,7 +21,7 @@ model ReproductiveProfile {
   // FHIR: Condition
   diagnosedConditions ReproductiveCondition[] @default([NONE])
   diagnosisDate       DateTime?               @db.Date
-  treatingDoctorId    String?                 @db.Uuid
+  treatingDoctorId    String?
 
   // Medication
   isOnBirthControl       Boolean @default(false)
@@ -38,11 +38,11 @@ model ReproductiveProfile {
 }
 
 model DailyHealthLog {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Observation.effectiveDateTime
@@ -88,11 +88,11 @@ model DailyHealthLog {
 }
 
 model CyclePrediction {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Prediction Dates

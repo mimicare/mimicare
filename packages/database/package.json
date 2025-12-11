@@ -2,26 +2,12 @@
   "name": "@mimicare/schema",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.js"
-    },
-    "./client": {
-      "types": "./generated/client/index.d.ts",
-      "require": "./generated/client/index.js",
-      "import": "./generated/client/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "generated/client"
-  ],
+  "main": "./client/index.js",
+  "types": "./client/index.d.ts",
   "scripts": {
-    "db:generate": "prisma generate",
+    "build": "yarn prisma:clean && prisma generate",
+    "db:generate": "yarn prisma:clean && prisma generate",
+    "prisma:clean": "rimraf prisma/generated",
     "db:migrate": "prisma migrate dev",
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -32,10 +18,7 @@
     "db:validate": "prisma validate",
     "db:format": "prisma format",
     "db:reset": "prisma migrate reset",
-    "build": "pnpm db:generate && tsc",
-    "clean": "rimraf generated dist",
-    "dev": "tsc --watch",
-    "type-check": "tsc --noEmit"
+    "clean": "rimraf node_modules .turbo prisma/generated dist"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
@@ -43,12 +26,11 @@
     "pg": "^8.16.3"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
-    "@types/pg": "^8.13.1",
-    "dotenv": "^16.4.7",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.16.0",
     "prisma": "^7.1.0",
     "rimraf": "^6.1.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.7.2"
   }
 }

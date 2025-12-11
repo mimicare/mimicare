@@ -82,14 +82,10 @@ coverage
 # SQLite databases (if using SQLite for dev)
 *.db
 *.db-journal
-packages/database/generated
+packages/database/client
 packages/database/dist
-packages/schema/client
-packages/schema/dist
-**/generated/client
 
 # Legacy/alternative paths
-**/prisma/generated
 
 # ==========================================
 # CONTEXT EXPORTS

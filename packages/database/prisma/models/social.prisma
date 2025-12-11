@@ -5,11 +5,11 @@
 // ===== INSTAGRAM-STYLE REELS & POSTS =====
 
 model Post {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  authorId String @db.Uuid
+  authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   title    String?      @db.VarChar(255)
@@ -56,14 +56,14 @@ model Post {
 }
 
 model Comment {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  postId String @db.Uuid
+  postId String
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  authorId String @db.Uuid
+  authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   content   String           @db.Text
@@ -78,13 +78,13 @@ model Comment {
 }
 
 model Like {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  postId String @db.Uuid
+  postId String
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
@@ -94,11 +94,11 @@ model Like {
 }
 
 model Question {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  askedById String @db.Uuid
+  askedById String
   askedBy   User   @relation(fields: [askedById], references: [id], onDelete: Cascade)
 
   title       String       @db.VarChar(500)
@@ -119,14 +119,14 @@ model Question {
 }
 
 model Answer {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  questionId String   @db.Uuid
+  questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  answeredById String @db.Uuid
+  answeredById String
   answeredBy   User   @relation(fields: [answeredById], references: [id], onDelete: Cascade)
 
   content String @db.Text
@@ -146,7 +146,7 @@ model Answer {
 // ===== CHAT & MESSAGING =====
 
 model Chat {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
@@ -164,13 +164,13 @@ model Chat {
 }
 
 model ChatParticipant {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  chatId String @db.Uuid
+  chatId String
   chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Communication.recipient
@@ -191,14 +191,14 @@ model ChatParticipant {
 // PK = chatId, SK = timestamp, TTL = 90 days
 // Use AWS AppSync (GraphQL) + DynamoDB for real-time subscriptions
 model Message {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  chatId String @db.Uuid
+  chatId String
   chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  senderId String @db.Uuid
+  senderId String
   sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   // FHIR: Communication.payload, Communication.sent, Communication.status
@@ -211,7 +211,7 @@ model Message {
   deliveredAt DateTime? @db.Timestamptz(3)
   readAt      DateTime? @db.Timestamptz(3)
 
-  replyToMessageId String?   @db.Uuid
+  replyToMessageId String?
   replyToMessage   Message?  @relation("MessageReplies", fields: [replyToMessageId], references: [id], onDelete: SetNull)
   replies          Message[] @relation("MessageReplies")
 
@@ -225,19 +225,19 @@ model Message {
 // ===== TELEMEDICINE APPOINTMENTS =====
 
 model Appointment {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  patientId String @db.Uuid
+  patientId String
   patient   User   @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
 
   // SAFETY FIX: If doctor is deleted, appointment history remains (Set to Null instead of Cascade)
-  doctorId      String?        @db.Uuid
+  doctorId      String?
   doctorProfile DoctorProfile? @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: SetNull)
 
   // NEW: Multi-Clinic Support
-  clinicId String? @db.Uuid
+  clinicId String?
   clinic   Clinic? @relation(fields: [clinicId], references: [id], onDelete: SetNull)
 
   scheduledAt      DateTime          @db.Timestamptz(3)
@@ -284,15 +284,15 @@ model Appointment {
 
 
 model AppointmentLog {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  appointmentId String      @db.Uuid
+  appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
   // FHIR: Provenance.activity, Provenance.agent, Provenance.recorded
   action      AppointmentLogAction
-  performedBy String?              @db.Uuid
+  performedBy String?
   details     Json?                @db.JsonB
   timestamp   DateTime             @default(now()) @db.Timestamptz(3)
 
@@ -304,14 +304,14 @@ model AppointmentLog {
 // ===== PAYMENT TRANSACTION (FIX #3: PAYMENT RELIABILITY) =====
 
 model PaymentTransaction {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  appointmentId String      @db.Uuid
+  appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
-  userId   String  @db.Uuid // Who paid?
+  userId   String   // Who paid?
   amount   Decimal @db.Decimal(10, 2)
   currency String  @default("INR") @db.VarChar(3)
 
@@ -337,11 +337,11 @@ model PaymentTransaction {
 // ===== DOCTOR PAYOUT (NEW: Missing 1%) =====
 
 model DoctorPayout {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  doctorId String        @db.Uuid
+  doctorId String
   doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   amount   Decimal @db.Decimal(10, 2)
@@ -369,21 +369,21 @@ model DoctorPayout {
 }
 
 model ModerationFlag {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  postId String @db.Uuid
+  postId String
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  reportedById String @db.Uuid
+  reportedById String
   reportedBy   User   @relation(fields: [reportedById], references: [id], onDelete: Cascade)
 
   reason      FlagReason       @default(SPAM)
   description String?          @db.Text
   status      ModerationStatus @default(PENDING)
   reviewedAt  DateTime?        @db.Timestamptz(3)
-  reviewedBy  String?          @db.Uuid // Admin who reviewed
+  reviewedBy  String?           // Admin who reviewed
 
   @@index([postId])
   @@index([reportedById])
@@ -396,19 +396,19 @@ model ModerationFlag {
 // Table Design: PK=entityType#entityId, SK=timestamp, TTL=365 days
 // Use this for compliance & security auditing only
 model AuditLog {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   // FHIR: AuditEvent.agent, AuditEvent.action, AuditEvent.entity, AuditEvent.recorded
-  userId     String?         @db.Uuid
+  userId     String?
   action     AuditAction
   entityType AuditEntityType
-  entityId   String          @db.Uuid
+  entityId   String
   changes    Json?           @db.JsonB
 
   ipAddress String?  @db.VarChar(45)
   userAgent String?  @db.Text
-  sessionId String?  @db.Uuid
+  sessionId String?
   timestamp DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([userId])

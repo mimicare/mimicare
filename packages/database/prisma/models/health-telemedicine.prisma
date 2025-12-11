@@ -3,16 +3,16 @@
 // ==========================================
 
 model Prescription {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  patientId String @db.Uuid
+  patientId String
   patient   User   @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  doctorId      String?        @db.Uuid
+  doctorId      String?
   doctor        DoctorProfile? @relation("DoctorPrescriptions", fields: [doctorId], references: [id], onDelete: SetNull)
-  appointmentId String?        @db.Uuid
+  appointmentId String?
   appointment   Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
 
   // FHIR: MedicationRequest
@@ -44,11 +44,11 @@ model Prescription {
 }
 
 model MedicalDocument {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: DocumentReference
@@ -63,8 +63,8 @@ model MedicalDocument {
   mimeType String? @db.VarChar(100)
 
   // Upload Context
-  uploadedBy       String         @db.Uuid
-  uploadedByDoctor String?        @db.Uuid
+  uploadedBy       String
+  uploadedByDoctor String?
   doctorUploader   DoctorProfile? @relation("DoctorUploads", fields: [uploadedByDoctor], references: [id], onDelete: SetNull)
 
   // OCR & AI Extraction (AWS Textract/Rekognition)

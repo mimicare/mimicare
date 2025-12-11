@@ -1,26 +1,23 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "db:generate": {
+      "cache": false,
+      "outputs": ["client/**"],
+      "inputs": ["prisma/schema.prisma"]
+    },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        ".next/**",
-        "build/**",
-        "node_modules/.prisma/**",
-        "node_modules/@prisma/**",
-        "tsconfig.tsbuildinfo"
-      ],
+      "dependsOn": ["^db:generate", "^build"],
+      "outputs": ["dist/**", "build/**", "client/**", "tsconfig.tsbuildinfo"],
       "env": [
         "DATABASE_URL",
         "NODE_ENV",
         "BACKEND_PORT",
         "FRONTEND_PORT",
-        "REDIS_HOST",
-        "REDIS_PORT",
-        "NEXT_PUBLIC_API_URL",
-        "JWT_SECRET",
-        "JWT_EXPIRATION"
+        "VITE_API_URL",
+        "VITE_WS_URL",
+        "BACKEND_URL",
+        "FRONTEND_URL"
       ]
     },
     "dev": {
@@ -34,79 +31,30 @@
         "FRONTEND_PORT",
         "REDIS_HOST",
         "REDIS_PORT",
-        "NEXT_PUBLIC_API_URL",
-        "JWT_SECRET",
-        "JWT_EXPIRATION",
+        "VITE_API_URL",
+        "VITE_WS_URL",
+        "JWT_ACCESS_TOKEN_SECRET",
+        "JWT_ACCESS_TOKEN_EXPIRATION",
+        "JWT_REFRESH_TOKEN_EXPIRATION",
+        "JWT_REFRESH_TOKEN_SECRET",
+        "BACKEND_URL",
         "FRONTEND_URL"
       ]
     },
-    "start": {
-      "cache": false,
-      "persistent": true,
-      "env": ["DATABASE_URL", "NODE_ENV", "BACKEND_PORT", "FRONTEND_PORT", "NEXT_PUBLIC_API_URL"]
-    },
-    "db:generate": {
-      "cache": true,
-      "outputs": ["node_modules/.prisma/**", "node_modules/@prisma/**"],
-      "env": ["DATABASE_URL"],
-      "persistent": false
-    },
-    "db:migrate": {
-      "cache": false,
-      "dependsOn": ["^db:generate"],
-      "env": ["DATABASE_URL"]
-    },
-    "db:push": {
-      "cache": false,
-      "env": ["DATABASE_URL"]
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true,
-      "env": ["DATABASE_URL"]
-    },
-    "db:seed": {
-      "cache": false,
-      "env": ["DATABASE_URL"]
+    "clean": {
+      "cache": false
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^db:generate"],
+      "outputs": []
     },
     "lint:fix": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^db:generate"],
       "cache": false
     },
     "type-check": {
-      "dependsOn": ["^build"],
-      "env": ["NODE_ENV"]
-    },
-    "format": {
-      "cache": false
-    },
-    "format:check": {
+      "dependsOn": ["^db:generate"],
       "outputs": []
-    },
-    "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
-      "env": ["DATABASE_URL", "NODE_ENV"]
-    },
-    "clean": {
-      "cache": false
     }
-  },
-  "globalEnv": [
-    "NODE_ENV",
-    "DATABASE_URL",
-    "BACKEND_PORT",
-    "FRONTEND_PORT",
-    "NEXT_PUBLIC_API_URL",
-    "JWT_SECRET",
-    "JWT_EXPIRATION",
-    "REDIS_HOST",
-    "REDIS_PORT",
-    "FRONTEND_URL",
-    "CI"
-  ],
-  "globalPassThroughEnv": ["CI", "VERCEL", "VERCEL_ENV", "VERCEL_URL"]
+  }
 }

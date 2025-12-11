@@ -1,0 +1,8 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
+-- For Posts (HNSW index is best for performance/recall balance)
+CREATE INDEX "posts_embedding_idx" ON "posts" USING hnsw ("contentEmbedding" vector_cosine_ops);
+
+-- For Questions
+CREATE INDEX "questions_embedding_idx" ON "questions" USING hnsw ("questionEmbedding" vector_cosine_ops);

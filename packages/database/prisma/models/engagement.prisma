@@ -5,11 +5,11 @@
 // TODO: OFFLOAD TO DYNAMODB - Low read, notification state management
 // Strategy: Single Table Design - PK=userId, SK=notificationType
 model NotificationPreference {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   notificationType NotificationType
@@ -29,13 +29,13 @@ model NotificationPreference {
 }
 
 model ContentReadLog {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  contentId       String            @db.Uuid
+  contentId       String
   contentTitle    String            @db.VarChar(500)
   contentCategory ContentCategory
   difficulty      ContentDifficulty
@@ -52,11 +52,11 @@ model ContentReadLog {
 }
 
 model ShoppingListItem {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   itemName    String  @db.VarChar(255)

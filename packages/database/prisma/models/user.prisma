@@ -3,7 +3,7 @@
 // ==========================================
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
@@ -30,6 +30,9 @@ model User {
   // FHIR: Patient.identifier
   abhaAddress String? @unique @db.VarChar(50)
   abhaId      String? @unique @db.VarChar(14)
+
+  refreshTokens RefreshToken[]
+  otpVerifications OtpVerification[]
 
   // Gamification
   points               Int       @default(0)
@@ -94,12 +97,102 @@ model User {
   @@map("users")
 }
 
-model UserSetting {
-  id        String   @id @default(uuid()) @db.Uuid
+// Multi-Device Refresh Token Management
+model RefreshToken {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @unique @db.Uuid
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token      String   @unique @db.Text
+  deviceId   String   @db.VarChar(255)
+  deviceName String   @db.VarChar(255)
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.Text
+
+  expiresAt DateTime @db.Timestamptz(3)
+  isRevoked Boolean  @default(false)
+
+  lastUsedAt DateTime? @db.Timestamptz(3)
+
+  @@index([userId, deviceId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// OTP Verification for Phone Auth
+model OtpVerification {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phoneNumber String      @db.VarChar(15)
+  countryCode CountryCode @default(IN)
+  otpCode     String      @db.VarChar(6)
+  otpHash     String      @db.VarChar(255) // bcrypt hash of OTP
+
+  purpose       OtpPurpose @default(LOGIN)
+  isVerified    Boolean    @default(false)
+  attempts      Int        @default(0)
+  maxAttempts   Int        @default(3)
+
+  expiresAt     DateTime   @db.Timestamptz(3)
+  verifiedAt    DateTime?  @db.Timestamptz(3)
+
+  // For rate limiting
+  resentCount   Int        @default(0)
+  lastResentAt  DateTime?  @db.Timestamptz(3)
+
+  @@index([phoneNumber, countryCode, purpose])
+  @@index([expiresAt])
+  @@map("otp_verifications")
+}
+
+// Email Verification Tokens
+model EmailVerificationToken {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId    String
+  email     String   @db.VarChar(255)
+  token     String   @unique @db.VarChar(255)
+
+  expiresAt DateTime @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+
+  @@index([token])
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+// Password Reset Tokens
+model PasswordResetToken {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  userId    String
+  token     String   @unique @db.VarChar(255)
+
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+
+model UserSetting {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // UX Customization
@@ -128,10 +221,10 @@ model UserSetting {
 // Strategy: Use Kinesis Data Firehose to stream to DynamoDB
 // Table Design: PK=userId, SK=timestamp, TTL=90 days
 model UserActivityLog {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  userId       String       @db.Uuid
+  userId       String
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   activityType ActivityType
   details      Json?        @db.JsonB
@@ -146,7 +239,7 @@ model UserActivityLog {
 // ==========================================
 
 model Clinic {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
@@ -178,11 +271,11 @@ model Clinic {
 }
 
 model DoctorProfile {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @unique @db.Uuid
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Practitioner
@@ -196,7 +289,7 @@ model DoctorProfile {
   // Verification
   isVerified Boolean   @default(false)
   verifiedAt DateTime? @db.Timestamptz(3)
-  verifiedBy String?   @db.Uuid
+  verifiedBy String?
 
   // Bio & Social
   bio             String? @db.Text
@@ -233,14 +326,14 @@ model DoctorProfile {
 // This handles: "Dr. Anbu visits Apollo Hospital on Mon/Wed and charges 500,
 // but visits Cloudnine on Fri and charges 1000"
 model DoctorClinicRegistry {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  doctorId String        @db.Uuid
+  doctorId String
   doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
-  clinicId String @db.Uuid
+  clinicId String
   clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 
   // ATTRIBUTES SPECIFIC TO THIS CLINIC
@@ -262,15 +355,15 @@ model DoctorClinicRegistry {
 }
 
 model DoctorAvailability {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  doctorId String        @db.Uuid
+  doctorId String
   doctor   DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   // Clinic is now largely MANDATORY for availability (unless it's 100% remote/home)
-  clinicId String? @db.Uuid
+  clinicId String?
   clinic   Clinic? @relation(fields: [clinicId], references: [id], onDelete: Cascade)
 
   // Schedule Definition (0=Sunday, 1=Monday, ..., 6=Saturday)

@@ -7,7 +7,14 @@
 enum UserRole {
   PATIENT
   DOCTOR
-  ADMIN
+}
+
+enum OtpPurpose {
+  REGISTRATION
+  LOGIN
+  PHONE_VERIFICATION
+  PASSWORD_RESET
+  TWO_FACTOR_AUTH
 }
 
 enum CountryCode {

@@ -3,11 +3,11 @@
 // ==========================================
 
 model PregnancyJourney {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Pregnancy Timeline
@@ -46,21 +46,21 @@ model PregnancyJourney {
 }
 
 model JourneyParticipant {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  journeyId String           @db.Uuid
+  journeyId String
   journey   PregnancyJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
-  participantId String @db.Uuid
+  participantId String
   participant   User   @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
   // FHIR: CareTeam.participant
   role       String    @db.VarChar(50)
   canEdit    Boolean   @default(false)
   canViewAll Boolean   @default(true)
-  invitedBy  String    @db.Uuid
+  invitedBy  String
   invitedAt  DateTime  @default(now()) @db.Timestamptz(3)
   acceptedAt DateTime? @db.Timestamptz(3)
 
@@ -71,11 +71,11 @@ model JourneyParticipant {
 }
 
 model VitalsRecord {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Observation.effectiveDateTime, Observation.performer
@@ -110,10 +110,10 @@ model VitalsRecord {
 }
 
 model FetalMovementRecord {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  journeyId String           @db.Uuid
+  journeyId String
   journey   PregnancyJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
   // FHIR: Observation.effectiveDateTime
@@ -126,11 +126,11 @@ model FetalMovementRecord {
 }
 
 model PeriodCycle {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Observation.effectivePeriod
@@ -152,11 +152,11 @@ model PeriodCycle {
 }
 
 model AbdmConsent {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // FHIR: Consent.identifier, Consent.status

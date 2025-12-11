@@ -3,15 +3,15 @@
 // ==========================================
 
 model UserRelationship {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   // FHIR: RelatedPerson
-  requesterId String @db.Uuid
+  requesterId String
   requester   User   @relation("RelationshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
 
-  accepterId String @db.Uuid
+  accepterId String
   accepter   User   @relation("RelationshipAccepter", fields: [accepterId], references: [id], onDelete: Cascade)
 
   // FHIR: RelatedPerson.relationship
@@ -43,11 +43,11 @@ model UserRelationship {
 }
 
 model EmergencyContact {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
   user   User   @relation("UserEmergencyContacts", fields: [userId], references: [id], onDelete: Cascade)
 
   name         String @db.VarChar(255)
@@ -65,10 +65,10 @@ model EmergencyContact {
 }
 
 model EmergencyAlert {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  userId String @db.Uuid
+  userId String
 
   emergencyType EmergencyType
   triggeredAt   DateTime      @default(now()) @db.Timestamptz(3)
