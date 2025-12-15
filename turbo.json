@@ -17,7 +17,9 @@
         "VITE_API_URL",
         "VITE_WS_URL",
         "BACKEND_URL",
-        "FRONTEND_URL"
+        "FRONTEND_URL",
+        "HTTP_PROXY",
+        "HTTPS_PROXY"
       ]
     },
     "dev": {
@@ -38,7 +40,10 @@
         "JWT_REFRESH_TOKEN_EXPIRATION",
         "JWT_REFRESH_TOKEN_SECRET",
         "BACKEND_URL",
-        "FRONTEND_URL"
+        "FRONTEND_URL",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY"
       ]
     },
     "clean": {

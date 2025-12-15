@@ -21,7 +21,7 @@ import { SendOtpDto, VerifyOtpDto, ResendOtpDto } from './dto/phone-auth.dto';
 import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
 import { Public } from '../../common/decorators/common';
-import { GoogleOAuthGuard, RefreshTokenGuard } from '../../common/guards/auth';
+import { AccessTokenGuard, GoogleOAuthGuard, RefreshTokenGuard } from '../../common/guards/auth';
 import { GetCurrentUserId } from '../../common/decorators/user';
 
 /**
@@ -35,6 +35,7 @@ import { GetCurrentUserId } from '../../common/decorators/user';
  * All endpoints are public unless marked with @ApiBearerAuth
  */
 @ApiTags('Authentication')
+@UseGuards(AccessTokenGuard)
 @Controller({ path: 'auth', version: '1' })
 export class V1AuthController {
   constructor(private readonly authService: V1AuthService) {}

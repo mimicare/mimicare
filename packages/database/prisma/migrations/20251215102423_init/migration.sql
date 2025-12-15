@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('PATIENT', 'DOCTOR');
 
@@ -147,6 +149,9 @@ CREATE TYPE "AuditAction" AS ENUM ('CREATE', 'UPDATE', 'DELETE', 'VIEW', 'EXPORT
 
 -- CreateEnum
 CREATE TYPE "AuditEntityType" AS ENUM ('USER', 'VITALS_RECORD', 'PREGNANCY_JOURNEY', 'APPOINTMENT', 'POST', 'DOCTOR_PROFILE', 'ABHA_CONSENT', 'MESSAGE', 'CHILD_PROFILE', 'VACCINATION_RECORD', 'GROWTH_RECORD', 'PRESCRIPTION', 'MEDICAL_DOCUMENT', 'PAYMENT');
+
+-- CreateEnum
+CREATE TYPE "FollowStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
 
 -- CreateTable
 CREATE TABLE "notification_preferences" (
@@ -836,13 +841,17 @@ CREATE TABLE "users" (
     "id" VARCHAR(21) NOT NULL,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(3) NOT NULL,
+    "isPrivateAccount" BOOLEAN NOT NULL DEFAULT false,
     "name" TEXT,
+    "username" TEXT,
     "profilePictureUrl" TEXT,
     "dateOfBirth" DATE,
     "gender" "Gender",
     "role" "UserRole" NOT NULL DEFAULT 'PATIENT',
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "followerCount" INTEGER NOT NULL DEFAULT 0,
+    "followingCount" INTEGER NOT NULL DEFAULT 0,
     "email" VARCHAR(255),
     "passwordHash" VARCHAR(255),
     "phoneNumber" VARCHAR(15),
@@ -858,6 +867,18 @@ CREATE TABLE "users" (
     "deletedAt" TIMESTAMPTZ(3),
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_follows" (
+    "id" VARCHAR(21) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "followerId" TEXT NOT NULL,
+    "followingId" TEXT NOT NULL,
+    "status" "FollowStatus" NOT NULL DEFAULT 'ACCEPTED',
+    "acceptedAt" TIMESTAMPTZ(3),
+
+    CONSTRAINT "user_follows_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1366,7 +1387,22 @@ CREATE INDEX "users_role_idx" ON "users"("role");
 CREATE INDEX "users_gender_idx" ON "users"("gender");
 
 -- CreateIndex
+CREATE INDEX "users_username_idx" ON "users"("username");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "users_countryCode_phoneNumber_key" ON "users"("countryCode", "phoneNumber");
+
+-- CreateIndex
+CREATE INDEX "user_follows_followerId_idx" ON "user_follows"("followerId");
+
+-- CreateIndex
+CREATE INDEX "user_follows_followingId_idx" ON "user_follows"("followingId");
+
+-- CreateIndex
+CREATE INDEX "user_follows_status_idx" ON "user_follows"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_follows_followerId_followingId_key" ON "user_follows"("followerId", "followingId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "refresh_tokens"("token");
@@ -1594,6 +1630,12 @@ ALTER TABLE "moderation_flags" ADD CONSTRAINT "moderation_flags_postId_fkey" FOR
 ALTER TABLE "moderation_flags" ADD CONSTRAINT "moderation_flags_reportedById_fkey" FOREIGN KEY ("reportedById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "user_follows" ADD CONSTRAINT "user_follows_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_follows" ADD CONSTRAINT "user_follows_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1619,3 +1661,10 @@ ALTER TABLE "doctor_availability" ADD CONSTRAINT "doctor_availability_doctorId_f
 
 -- AddForeignKey
 ALTER TABLE "doctor_availability" ADD CONSTRAINT "doctor_availability_clinicId_fkey" FOREIGN KEY ("clinicId") REFERENCES "clinics"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+-- For Posts (HNSW index is best for performance/recall balance)
+CREATE INDEX "posts_embedding_idx" ON "posts" USING hnsw ("contentEmbedding" vector_cosine_ops);
+
+-- For Questions
+CREATE INDEX "questions_embedding_idx" ON "questions" USING hnsw ("questionEmbedding" vector_cosine_ops);

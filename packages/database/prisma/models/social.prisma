@@ -256,11 +256,11 @@ model Appointment {
   recordingUrl    String?          @db.Text
 
   // Fees & Payment
-  consultationFee Decimal       @db.Decimal(10, 2)
-  currency        String        @default("INR") @db.VarChar(3)
-  paymentStatus   PaymentStatus @default(PENDING)
+  consultationFee Decimal        @db.Decimal(10, 2)
+  currency        String         @default("INR") @db.VarChar(3)
+  paymentStatus   PaymentStatus  @default(PENDING)
   paymentMethod   PaymentMethod?
-  transactionId   String?       @unique @db.VarChar(255)
+  transactionId   String?        @unique @db.VarChar(255)
 
   reminderSentAt DateTime? @db.Timestamptz(3)
 
@@ -272,16 +272,14 @@ model Appointment {
   // Note: For full "Ghost Slot" protection (ignoring Cancelled bookings),
   // you must edit the generated migration SQL to add: WHERE "status" != 'CANCELLED'
   @@unique([doctorId, scheduledAt])
-
-  @@map("appointments")
   @@index([patientId])
   @@index([doctorId])
   @@index([clinicId])
   @@index([scheduledAt])
   @@index([status])
   @@index([paymentStatus])
+  @@map("appointments")
 }
-
 
 model AppointmentLog {
   id        String   @id @default(nanoid()) @db.VarChar(21)
@@ -311,7 +309,7 @@ model PaymentTransaction {
   appointmentId String
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
-  userId   String   // Who paid?
+  userId   String // Who paid?
   amount   Decimal @db.Decimal(10, 2)
   currency String  @default("INR") @db.VarChar(3)
 
@@ -383,7 +381,7 @@ model ModerationFlag {
   description String?          @db.Text
   status      ModerationStatus @default(PENDING)
   reviewedAt  DateTime?        @db.Timestamptz(3)
-  reviewedBy  String?           // Admin who reviewed
+  reviewedBy  String? // Admin who reviewed
 
   @@index([postId])
   @@index([reportedById])

@@ -284,7 +284,7 @@ export class V1AuthService {
         name,
         passwordHash,
         role: UserRole.PATIENT,
-        isVerified: false, // Changed to false to require email verification
+        isVerified: process.env.NODE_ENV === 'development' ? true : false,
         settings: {
           create: {},
         },

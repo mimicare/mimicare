@@ -1,4 +1,18 @@
 import 'tsconfig-paths/register';
+
+import { bootstrap as globalProxyAgent } from 'global-agent';
+
+const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
+const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+
+if (httpProxy || httpsProxy) {
+  globalProxyAgent();
+  global.GLOBAL_AGENT.HTTP_PROXY = httpProxy || httpsProxy || '';
+  global.GLOBAL_AGENT.HTTPS_PROXY = httpsProxy || httpProxy || '';
+  global.GLOBAL_AGENT.NO_PROXY = process.env.NO_PROXY || 'localhost,127.0.0.1';
+}
+
+// NOW import everything else
 import { NestFactory, Reflector } from '@nestjs/core';
 import {
   ClassSerializerInterceptor,
@@ -51,9 +65,6 @@ function flattenValidationErrors(
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-
-  const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
-  const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
 
   if (httpProxy || httpsProxy) {
     logger.log(`🔌 Proxy configured: ${httpProxy || httpsProxy}`);
@@ -123,7 +134,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Mimicare API v1')
-    .setDescription('AI Workflow Canvas - Multi-LLM Node-Based Platform')
+    .setDescription('Women & Child Healthcare Platform')
     .setVersion('1.0')
     .addBearerAuth({
       type: 'http',

@@ -3,35 +3,41 @@
 // ==========================================
 
 model User {
-  id        String   @id @default(nanoid()) @db.VarChar(21)
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  id               String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  isPrivateAccount Boolean  @default(false)
 
   // Basic Profile
-  // FHIR: Patient.name, Patient.photo, Patient.gender
-  name              String?
-  profilePictureUrl String?   @db.Text // AWS S3 presigned URLs can be very long
-  dateOfBirth       DateTime? @db.Date // FHIR: Patient.birthDate
-  gender            Gender? // FHIR: Patient.gender
+  name     String?
+  username String?
+
+  profilePictureUrl String?   @db.Text
+  dateOfBirth       DateTime? @db.Date
+  gender            Gender?
   role              UserRole  @default(PATIENT)
   isVerified        Boolean   @default(false)
   isActive          Boolean   @default(true)
 
+  // SOCIAL: Instagram-style Followers/Following
+  followerCount  Int          @default(0)
+  followingCount Int          @default(0)
+  followers      UserFollow[] @relation("UserFollowing") // People following ME (I am the followingId)
+  following      UserFollow[] @relation("UserFollower") // People I am following (I am the followerId)
+
   // Multi-Method Authentication
-  // FHIR: Patient.telecom
   email           String?      @unique @db.VarChar(255)
   passwordHash    String?      @db.VarChar(255)
-  phoneNumber     String?      @db.VarChar(15) // Uniqueness enforced via composite constraint
+  phoneNumber     String?      @db.VarChar(15)
   countryCode     CountryCode? @default(IN)
   isPhoneVerified Boolean      @default(false)
   googleId        String?      @unique @db.VarChar(255)
 
   // ABDM/ABHA Integration
-  // FHIR: Patient.identifier
   abhaAddress String? @unique @db.VarChar(50)
   abhaId      String? @unique @db.VarChar(14)
 
-  refreshTokens RefreshToken[]
+  refreshTokens    RefreshToken[]
   otpVerifications OtpVerification[]
 
   // Gamification
@@ -45,7 +51,7 @@ model User {
 
   // Relations
   settings      UserSetting?
-  activityLogs  UserActivityLog[] // TODO: OFFLOAD TO DYNAMODB after 50k users
+  activityLogs  UserActivityLog[]
   doctorProfile DoctorProfile?
 
   // === REPRODUCTIVE HEALTH ===
@@ -73,7 +79,7 @@ model User {
 
   // === ENGAGEMENT ===
   contentReads            ContentReadLog[]
-  notificationPreferences NotificationPreference[] // TODO: OFFLOAD TO DYNAMODB
+  notificationPreferences NotificationPreference[]
   shoppingListItems       ShoppingListItem[]
 
   // === SOCIAL & COMPLIANCE ===
@@ -85,7 +91,7 @@ model User {
   answers            Answer[]
   appointments       Appointment[]     @relation("PatientAppointments")
   moderationFlags    ModerationFlag[]
-  sentMessages       Message[]         @relation("MessageSender") // TODO: OFFLOAD TO DYNAMODB
+  sentMessages       Message[]         @relation("MessageSender")
   chatParticipations ChatParticipant[]
 
   @@unique([countryCode, phoneNumber], name: "unique_phone_per_country")
@@ -94,7 +100,30 @@ model User {
   @@index([abhaAddress])
   @@index([role])
   @@index([gender])
+  @@index([username]) // ADD INDEX for username lookups
   @@map("users")
+}
+
+// Instagram-style Followers/Following (CORRECTED)
+model UserFollow {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  followerId String
+  follower   User   @relation("UserFollower", fields: [followerId], references: [id], onDelete: Cascade)
+
+  followingId String
+  following   User   @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // NEW: For private account follow requests
+  status     FollowStatus @default(ACCEPTED) // PENDING, ACCEPTED, REJECTED
+  acceptedAt DateTime?    @db.Timestamptz(3)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@index([status])
+  @@map("user_follows")
 }
 
 // Multi-Device Refresh Token Management
@@ -106,11 +135,11 @@ model RefreshToken {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  token      String   @unique @db.Text
-  deviceId   String   @db.VarChar(255)
-  deviceName String   @db.VarChar(255)
-  ipAddress  String?  @db.VarChar(45)
-  userAgent  String?  @db.Text
+  token      String  @unique @db.Text
+  deviceId   String  @db.VarChar(255)
+  deviceName String  @db.VarChar(255)
+  ipAddress  String? @db.VarChar(45)
+  userAgent  String? @db.Text
 
   expiresAt DateTime @db.Timestamptz(3)
   isRevoked Boolean  @default(false)
@@ -136,17 +165,17 @@ model OtpVerification {
   otpCode     String      @db.VarChar(6)
   otpHash     String      @db.VarChar(255) // bcrypt hash of OTP
 
-  purpose       OtpPurpose @default(LOGIN)
-  isVerified    Boolean    @default(false)
-  attempts      Int        @default(0)
-  maxAttempts   Int        @default(3)
+  purpose     OtpPurpose @default(LOGIN)
+  isVerified  Boolean    @default(false)
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(3)
 
-  expiresAt     DateTime   @db.Timestamptz(3)
-  verifiedAt    DateTime?  @db.Timestamptz(3)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  verifiedAt DateTime? @db.Timestamptz(3)
 
   // For rate limiting
-  resentCount   Int        @default(0)
-  lastResentAt  DateTime?  @db.Timestamptz(3)
+  resentCount  Int       @default(0)
+  lastResentAt DateTime? @db.Timestamptz(3)
 
   @@index([phoneNumber, countryCode, purpose])
   @@index([expiresAt])
@@ -158,11 +187,11 @@ model EmailVerificationToken {
   id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  userId    String
-  email     String   @db.VarChar(255)
-  token     String   @unique @db.VarChar(255)
+  userId String
+  email  String @db.VarChar(255)
+  token  String @unique @db.VarChar(255)
 
-  expiresAt DateTime @db.Timestamptz(3)
+  expiresAt DateTime  @db.Timestamptz(3)
   usedAt    DateTime? @db.Timestamptz(3)
 
   @@index([token])
@@ -175,8 +204,8 @@ model PasswordResetToken {
   id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  userId    String
-  token     String   @unique @db.VarChar(255)
+  userId String
+  token  String @unique @db.VarChar(255)
 
   expiresAt DateTime  @db.Timestamptz(3)
   usedAt    DateTime? @db.Timestamptz(3)
@@ -185,7 +214,6 @@ model PasswordResetToken {
   @@index([userId])
   @@map("password_reset_tokens")
 }
-
 
 model UserSetting {
   id        String   @id @default(nanoid()) @db.VarChar(21)
@@ -382,4 +410,10 @@ model DoctorAvailability {
   @@index([doctorId, dayOfWeek])
   @@index([clinicId])
   @@map("doctor_availability")
+}
+
+enum FollowStatus {
+  PENDING // Waiting for approval (for private accounts)
+  ACCEPTED // Follow approved
+  REJECTED // Follow request denied
 }
