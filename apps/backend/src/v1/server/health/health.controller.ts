@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
-import { HealthCheckService, HealthCheck } from '@nestjs/terminus';
+import { type HealthCheckService, HealthCheck } from '@nestjs/terminus';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { PrismaHealthIndicator } from './prisma.health';
-import { InternetHealthIndicator } from './internet.health';
+import { type PrismaHealthIndicator } from './prisma.health';
+import { type InternetHealthIndicator } from './internet.health';
 import { Public } from '../../../common/decorators/common';
 
 @Controller({ version: '1', path: 'server/health' })

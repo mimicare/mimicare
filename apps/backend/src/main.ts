@@ -23,7 +23,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationError } from 'class-validator';
+import { type ValidationError } from 'class-validator';
 
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/exception.filters';
@@ -110,10 +110,10 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      forbidNonWhitelisted: true,
       transformOptions: {
         enableImplicitConversion: true,
       },
-      forbidNonWhitelisted: true,
       exceptionFactory: (validationErrors: ValidationError[] = []) => {
         const flattened = flattenValidationErrors(validationErrors);
         return new HttpException(

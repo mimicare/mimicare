@@ -84,3 +84,21 @@ model EmergencyAlert {
   @@index([triggeredAt])
   @@map("emergency_alerts")
 }
+
+enum RelationType {
+  PARTNER // Spouse/Boyfriend/Girlfriend
+  GUARDIAN // Parent/Legal Guardian (for teens)
+  CAREGIVER // Nurse/Family Caregiver
+  SIBLING
+  FRIEND
+}
+
+// ===== EMERGENCY =====
+
+enum EmergencyType {
+  LABOR_STARTED
+  HEAVY_BLEEDING
+  SEVERE_PAIN
+  MEDICAL_EMERGENCY
+  SAFETY_CONCERN
+}

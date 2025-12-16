@@ -11,13 +11,13 @@ import {
   Ip,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
-import { Request, Response } from 'express';
-import { V1AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SendOtpDto, VerifyOtpDto, ResendOtpDto } from './dto/phone-auth.dto';
+import { type Request, type Response } from 'express';
+import { type V1AuthService } from './auth.service';
+import { type RegisterDto } from './dto/register.dto';
+import { type LoginDto } from './dto/login.dto';
+import { type ForgotPasswordDto } from './dto/forgot-password.dto';
+import { type ResetPasswordDto } from './dto/reset-password.dto';
+import { type SendOtpDto, type VerifyOtpDto, type ResendOtpDto } from './dto/phone-auth.dto';
 import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
 import { Public } from '../../common/decorators/common';

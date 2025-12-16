@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
-import { HttpService } from '@nestjs/axios';
+import { HealthIndicator, type HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
+import { type HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()

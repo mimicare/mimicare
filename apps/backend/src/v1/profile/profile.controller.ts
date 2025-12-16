@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { GetCurrentUserId } from '../../common/decorators/user';
-import { UpdateProfileDto, ConfirmDeleteDto, UserProfileDto } from './dto';
-import { V1ProfileService } from './profile.service';
+import { type UpdateProfileDto, type ConfirmDeleteDto, UserProfileDto } from './dto';
+import { type V1ProfileService } from './profile.service';
 import { AccessTokenGuard } from '../../common/guards/auth';
 
 /**

@@ -125,32 +125,6 @@ model FetalMovementRecord {
   @@map("fetal_movement_records")
 }
 
-model PeriodCycle {
-  id        String   @id @default(nanoid()) @db.VarChar(21)
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // FHIR: Observation.effectivePeriod
-  startDate      DateTime  @db.Date
-  endDate        DateTime? @db.Date
-  cycleLength    Int?
-  periodDuration Int?
-
-  // Flow & Fertility Tracking
-  flowIntensity        PeriodFlowIntensity?
-  symptomsAndMood      String[]             @default([])
-  cervicalMucus        CervicalMucus?
-  basalBodyTemperature Decimal?             @db.Decimal(4, 2)
-
-  notes String? @db.Text
-
-  @@index([userId, startDate])
-  @@map("period_cycles")
-}
-
 model AbdmConsent {
   id        String   @id @default(nanoid()) @db.VarChar(21)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
@@ -180,4 +154,46 @@ model AbdmConsent {
   @@index([consentHandle])
   @@index([status])
   @@map("abdm_consents")
+}
+
+enum AbdmConsentStatus {
+  REQUESTED
+  GRANTED
+  DENIED
+  EXPIRED
+  REVOKED
+}
+
+enum VitalsSource {
+  MANUAL_ENTRY
+  CLINIC_MEASUREMENT
+  IMPORTED
+  WEARABLE_DEVICE
+}
+
+enum PregnancyStatus {
+  TRYING_TO_CONCEIVE
+  PREGNANT
+  POSTPARTUM
+  NOT_PREGNANT
+}
+
+enum PregnancyRiskLevel {
+  LOW
+  MODERATE
+  HIGH
+}
+
+enum DeliveryOutcome {
+  LIVE_BIRTH
+  STILLBIRTH
+  MISCARRIAGE
+  ONGOING
+}
+
+enum DeliveryMethod {
+  VAGINAL_NORMAL
+  VAGINAL_ASSISTED
+  CESAREAN_PLANNED
+  CESAREAN_EMERGENCY
 }

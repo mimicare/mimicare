@@ -7,9 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ActivityType, CountryCode, Prisma, Gender, LifeStage } from '@mimicare/schema';
-import { UpdateProfileDto, ConfirmDeleteDto, UserProfileDto } from './dto';
+import { type UpdateProfileDto, type ConfirmDeleteDto, UserProfileDto } from './dto';
 import { plainToInstance } from 'class-transformer';
-import { PrismaService } from '../../prisma/prisma.service';
+import { type PrismaService } from '../../prisma/prisma.service';
 
 /**
  * V1 Profile Service

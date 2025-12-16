@@ -1,8 +1,10 @@
-import axios, { AxiosInstance } from 'axios';
+import { Logger } from '@nestjs/common';
+import axios, { type AxiosInstance } from 'axios';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 export function createHttpClient(): AxiosInstance {
+  const logger = new Logger('HttpClient');
   const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
   const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
 
@@ -13,27 +15,23 @@ export function createHttpClient(): AxiosInstance {
     },
   });
 
-  if (httpProxy || httpsProxy) {
-    const proxyUrl = httpProxy || httpsProxy;
+  const proxyUrl = httpProxy || httpsProxy;
 
-    if (!proxyUrl) {
-      return client;
-    }
-
-    console.log(`[HTTP Client] 🔌 Proxy configured: ${proxyUrl}`);
+  if (proxyUrl) {
+    logger.log(`🔌 Proxy configured: ${proxyUrl}`);
 
     try {
       client.defaults.httpAgent = new HttpProxyAgent(proxyUrl);
       client.defaults.httpsAgent = new HttpsProxyAgent(proxyUrl);
       client.defaults.proxy = false;
 
-      console.log('[HTTP Client] ✅ Proxy agents configured successfully');
+      logger.log('✅ Proxy agents configured successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[HTTP Client] ❌ Failed to configure proxy: ${errorMessage}`);
+      logger.error(`❌ Failed to configure proxy: ${errorMessage}`);
     }
   } else {
-    console.log('[HTTP Client] 🔌 No proxy configured (direct connection)');
+    logger.log('🔌 No proxy configured (direct connection)');
   }
 
   return client;

@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { V1ProfileService } from './profile.service';
 import { PrismaService } from '../../prisma/prisma.service';

@@ -7,19 +7,19 @@ import {
   Logger,
   ForbiddenException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma/prisma.service';
+import { type ConfigService } from '@nestjs/config';
+import { type JwtService } from '@nestjs/jwt';
+import { type PrismaService } from '../../prisma/prisma.service';
 import { CountryCode, OtpPurpose, UserRole } from '@mimicare/schema';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import {
-  AuthResponse,
-  AuthTokens,
-  DeviceInfo,
-  GoogleUserData,
-  JwtPayload,
-  StatefulJwtPayload,
+  type AuthResponse,
+  type AuthTokens,
+  type DeviceInfo,
+  type GoogleUserData,
+  type JwtPayload,
+  type StatefulJwtPayload,
 } from './types';
 
 @Injectable()
@@ -62,7 +62,7 @@ export class V1AuthService {
     const canResendAt = new Date();
     canResendAt.setSeconds(canResendAt.getSeconds() + this.OTP_RESEND_COOLDOWN_SECONDS); // Find or create user
 
-    let user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         unique_phone_per_country: {
           countryCode,
@@ -498,8 +498,10 @@ export class V1AuthService {
 
   async refreshTokens(refreshToken: string, deviceId: string): Promise<AuthTokens> {
     // 1. Find and validate refresh token
+    const cleanToken = refreshToken.replace('Bearer ', '').trim();
+
     const tokenRecord = await this.prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+      where: { token: cleanToken },
       include: { user: true },
     });
 
@@ -512,32 +514,30 @@ export class V1AuthService {
     }
 
     if (tokenRecord.deviceId !== deviceId) {
-      this.logger.warn(
-        `Refresh token device ID mismatch for user ${tokenRecord.userId}. Attempted deviceId: ${deviceId}, Original deviceId: ${tokenRecord.deviceId}`,
-      );
-      throw new UnauthorizedException(
-        'Device mismatch or token theft attempt. Please log in again.',
-      );
-    } // 2. Generate new tokens (Access token will contain a temporary ID initially)
+      this.logger.warn(`Refresh token device ID mismatch for user ${tokenRecord.userId}.`);
+      throw new UnauthorizedException('Device mismatch. Please log in again.');
+    }
 
+    // 2. Generate new tokens (We need the Refresh Token from this batch)
     const tokensWithTempId = await this.generateTokens(tokenRecord.user, deviceId);
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-    // 3. Use a transaction to revoke old, create new, and update the Access Token with the final session ID.
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     try {
+      // 3. Save the Refresh Token from Step 2 into the DB
       const newRecord = await this.prisma.$transaction(async (tx) => {
-        // Revoke old refresh token (set isRevoked to true)
+        // Revoke old token
         await tx.refreshToken.update({
           where: { id: tokenRecord.id },
           data: { isRevoked: true, lastUsedAt: new Date() },
-        }); // Store the NEW refresh token (gets a new database ID)
+        });
 
+        // Store the NEW refresh token
         return tx.refreshToken.create({
           data: {
             userId: tokenRecord.user.id,
-            token: tokensWithTempId.refreshToken,
+            token: tokensWithTempId.refreshToken, // <--- SAVED TO DB
             deviceId: deviceId,
             deviceName: tokenRecord.deviceName,
             ipAddress: tokenRecord.ipAddress,
@@ -547,29 +547,28 @@ export class V1AuthService {
         });
       });
 
-      // 4. Re-sign the Access Token with the new session ID
+      // 4. Re-sign ONLY the Access Token to include the new DB ID
       const finalTokens = await this.generateTokens(
         tokenRecord.user,
         deviceId,
-        newRecord.id, // Use the new RefreshToken record ID as sessionId
-      ); // 5. Log activity
+        newRecord.id, // Use the new RefreshToken record ID
+      );
 
       await this.logUserActivity(tokenRecord.user.id, 'LOGIN', {
         action: 'REFRESH_TOKEN',
         deviceId,
-      }); // 6. Return the final tokens
+      });
 
-      return finalTokens;
+      return {
+        accessToken: finalTokens.accessToken,
+
+        refreshToken: tokensWithTempId.refreshToken,
+      };
     } catch (e: any) {
       if (e.code === 'P2002') {
-        this.logger.error(
-          `P2002 Unique Constraint Failed during token refresh for user ${tokenRecord.userId}. Old Token ID: ${tokenRecord.id}.`,
-          e.stack,
-        );
+        this.logger.error(`P2002 Error during refresh`, e.stack);
       }
-      throw new UnauthorizedException(
-        'Token refresh failed due to a server error. Please log in again.',
-      );
+      throw new UnauthorizedException('Token refresh failed. Please log in again.');
     }
   }
 
@@ -676,10 +675,9 @@ export class V1AuthService {
 
   private async generateAuthResponse(user: any, deviceInfo: DeviceInfo): Promise<AuthResponse> {
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-    // 1. Generate tokens with a temporary ID for the Access Token
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
-    const tokensWithTempId = await this.generateTokens(user, deviceInfo.deviceId); // 2. Store the new session (RefreshToken) first to get its unique database ID (CUID)
+    const tokensWithTempId = await this.generateTokens(user, deviceInfo.deviceId);
 
     const tokenRecord = await this.prisma.refreshToken.create({
       data: {
@@ -691,16 +689,13 @@ export class V1AuthService {
         userAgent: deviceInfo.userAgent,
         expiresAt,
       },
-    }); // 3. Re-sign the Access Token with the correct database ID (tokenRecord.id)
+    });
 
-    const finalTokens = await this.generateTokens(
-      user,
-      deviceInfo.deviceId,
-      tokenRecord.id, // Pass the DB ID to embed in the Access Token
-    );
+    const finalTokens = await this.generateTokens(user, deviceInfo.deviceId, tokenRecord.id);
 
     return {
-      ...finalTokens, // Use the final tokens with the embedded sessionId
+      accessToken: finalTokens.accessToken,
+      refreshToken: tokensWithTempId.refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -712,7 +707,7 @@ export class V1AuthService {
         profilePictureUrl: user.profilePictureUrl,
       },
       deviceId: deviceInfo.deviceId,
-      expiresIn: 15 * 60, // 15 minutes
+      expiresIn: 15 * 60,
     };
   }
 
@@ -721,19 +716,17 @@ export class V1AuthService {
     deviceId: string,
     refreshTokenId?: string,
   ): Promise<AuthTokens> {
-    // Base payload for both tokens
     const basePayload: JwtPayload = {
       userId: user.id,
       role: user.role,
     };
 
-    const jti = this.generateJti(); // Access Token Payload: MUST contain sessionId (the DB ID) for stateful check
+    const jti = this.generateJti();
 
     const accessTokenPayload: StatefulJwtPayload = {
       ...basePayload,
-      // Use the actual DB ID if provided (after persistence), otherwise use the random JTI (during initial persistence)
       sessionId: refreshTokenId || jti,
-    }; // Refresh Token Payload: MUST contain JTI for collision prevention
+    };
 
     const refreshPayload = {
       ...basePayload,
@@ -743,12 +736,12 @@ export class V1AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(accessTokenPayload, {
-        secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
-        expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION') || '15m',
+        secret: this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRATION') as any,
       }),
       this.jwtService.signAsync(refreshPayload, {
-        secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION') || '7d',
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_EXPIRATION') as any,
       }),
     ]);
 

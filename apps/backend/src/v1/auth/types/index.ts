@@ -1,4 +1,4 @@
-import { CountryCode } from '@mimicare/schema';
+import { type CountryCode } from '@mimicare/schema';
 
 export interface JwtPayload {
   userId: string;

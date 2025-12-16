@@ -2957,11 +2957,13 @@ __metadata:
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.3"
     cuid: "npm:^3.0.0"
+    date-fns: "npm:^4.1.0"
     eslint: "npm:^9.17.0"
     file-type: "npm:^21.1.1"
     global-agent: "npm:^3.0.0"
     googleapis: "npm:^168.0.0"
     jest: "npm:^29.7.0"
+    jest-mock-extended: "npm:^4.0.0"
     mime-types: "npm:^3.0.2"
     nanoid: "npm:^5.1.6"
     passport: "npm:^0.7.0"
@@ -6588,6 +6590,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "date-fns@npm:4.1.0"
+  checksum: 10c0/b79ff32830e6b7faa009590af6ae0fb8c3fd9ffad46d930548fbb5acf473773b4712ae887e156ba91a7b3dc30591ce0f517d69fd83bd9c38650fdc03b4e0bac8
+  languageName: node
+  linkType: hard
+
 "debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4, debug@npm:^4.3.5, debug@npm:^4.3.7, debug@npm:^4.4.0, debug@npm:^4.4.1, debug@npm:^4.4.3":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
@@ -9235,6 +9244,19 @@ __metadata:
     slash: "npm:^3.0.0"
     stack-utils: "npm:^2.0.3"
   checksum: 10c0/850ae35477f59f3e6f27efac5215f706296e2104af39232bb14e5403e067992afb5c015e87a9243ec4d9df38525ef1ca663af9f2f4766aa116f127247008bd22
+  languageName: node
+  linkType: hard
+
+"jest-mock-extended@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "jest-mock-extended@npm:4.0.0"
+  dependencies:
+    ts-essentials: "npm:^10.0.2"
+  peerDependencies:
+    "@jest/globals": ^28.0.0 || ^29.0.0 || ^30.0.0
+    jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0 || ^30.0.0
+    typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
+  checksum: 10c0/ba51e8e49dba995a54bd9c45aa4d27e6b64a6199289c92292a286117d3f8a733fe480fc56b6d356505696fc79af193625892f5022ea69243525e706515a93249
   languageName: node
   linkType: hard
 
@@ -12587,6 +12609,18 @@ __metadata:
   peerDependencies:
     typescript: ">=4.8.4"
   checksum: 10c0/9806a38adea2db0f6aa217ccc6bc9c391ddba338a9fe3080676d0d50ed806d305bb90e8cef0276e793d28c8a929f400abb184ddd7ff83a416959c0f4d2ce754f
+  languageName: node
+  linkType: hard
+
+"ts-essentials@npm:^10.0.2":
+  version: 10.1.1
+  resolution: "ts-essentials@npm:10.1.1"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/8c59148a03eae086e7b1454fa6895e94e2f71385089ccda7e1f720a586749ede7e49ff7338e5f27e44a79f4bed740cc5dc3ad59313769bec028a85fa985685ff
   languageName: node
   linkType: hard
 

@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { V1AuthController } from './auth.controller';
 import { V1AuthService } from './auth.service';
 import { CountryCode, UserRole } from '@mimicare/schema';
-import { Request, Response } from 'express';
+import { type Request, type Response } from 'express';
 
 describe('V1AuthController', () => {
   let controller: V1AuthController;

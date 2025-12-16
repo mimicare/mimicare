@@ -82,3 +82,41 @@ model MedicalDocument {
   @@index([documentDate])
   @@map("medical_documents")
 }
+
+enum MedicalDocumentType {
+  LAB_REPORT
+  ULTRASOUND
+  PRESCRIPTION
+  DISCHARGE_SUMMARY
+  XRAY
+  MRI
+  CT_SCAN
+  VACCINATION_CERTIFICATE
+  INSURANCE_DOCUMENT
+  OTHER
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  DISCONTINUED
+}
+
+enum MedicationFrequency {
+  ONCE_DAILY
+  TWICE_DAILY
+  THRICE_DAILY
+  FOUR_TIMES_DAILY
+  WEEKLY
+  AS_NEEDED
+  BEFORE_MEALS
+  AFTER_MEALS
+}
+
+enum MeetingProvider {
+  AWS_CHIME
+  TWILIO
+  ZOOM
+  GOOGLE_MEET
+  CUSTOM
+}

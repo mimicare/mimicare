@@ -1,61 +1,22 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('PATIENT', 'DOCTOR');
+CREATE TYPE "NotificationType" AS ENUM ('PILL_REMINDER', 'OVULATION_ALERT', 'PERIOD_PREDICTION', 'APPOINTMENT_REMINDER', 'VACCINE_DUE', 'GROWTH_CHECKUP', 'WATER_REMINDER', 'EXERCISE_REMINDER', 'CYCLE_IRREGULARITY', 'PARTNER_ALERT', 'PAYMENT_RECEIVED', 'PAYOUT_PROCESSED', 'GENERAL');
 
 -- CreateEnum
-CREATE TYPE "OtpPurpose" AS ENUM ('REGISTRATION', 'LOGIN', 'PHONE_VERIFICATION', 'PASSWORD_RESET', 'TWO_FACTOR_AUTH');
+CREATE TYPE "NotificationChannel" AS ENUM ('PUSH', 'EMAIL', 'SMS', 'WHATSAPP');
 
 -- CreateEnum
-CREATE TYPE "CountryCode" AS ENUM ('IN', 'US', 'GB');
+CREATE TYPE "ContentCategory" AS ENUM ('MENSTRUAL_HEALTH', 'FERTILITY', 'PREGNANCY', 'POSTPARTUM', 'CHILD_CARE', 'MENOPAUSE', 'NUTRITION', 'MENTAL_HEALTH', 'REPRODUCTIVE_DISORDERS');
 
 -- CreateEnum
-CREATE TYPE "Theme" AS ENUM ('LIGHT', 'DARK', 'SYSTEM');
-
--- CreateEnum
-CREATE TYPE "PreferredLanguage" AS ENUM ('ENGLISH', 'HINDI', 'TAMIL');
-
--- CreateEnum
-CREATE TYPE "ActivityType" AS ENUM ('LOGIN', 'VITALS_ENTRY', 'APPOINTMENT_BOOKED', 'STREAK_COMPLETED', 'POST_CREATED', 'MESSAGE_SENT', 'MILESTONE_ACHIEVED', 'VACCINE_ADMINISTERED', 'DAILY_LOG_COMPLETED', 'ARTICLE_READ', 'VIDEO_WATCHED', 'REEL_POSTED');
-
--- CreateEnum
-CREATE TYPE "LifeStage" AS ENUM ('PUBERTY', 'REPRODUCTIVE', 'PERIMENOPAUSE', 'POSTMENOPAUSE');
-
--- CreateEnum
-CREATE TYPE "RelationType" AS ENUM ('PARTNER', 'GUARDIAN', 'CAREGIVER', 'SIBLING', 'FRIEND');
-
--- CreateEnum
-CREATE TYPE "MedicalCouncil" AS ENUM ('MCI', 'NMC', 'STATE_COUNCIL');
-
--- CreateEnum
-CREATE TYPE "DoctorSpecialization" AS ENUM ('OBSTETRICIAN_GYNECOLOGIST', 'GYNECOLOGIST', 'MATERNAL_FETAL_MEDICINE', 'PEDIATRICIAN', 'GENERAL_PRACTITIONER', 'NEONATOLOGIST', 'CHILD_SPECIALIST', 'ENDOCRINOLOGIST', 'NUTRITIONIST', 'MENTAL_HEALTH');
-
--- CreateEnum
-CREATE TYPE "ConsultationType" AS ENUM ('IN_PERSON', 'VIDEO', 'CHAT', 'PHONE');
+CREATE TYPE "ContentDifficulty" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'ADVANCED');
 
 -- CreateEnum
 CREATE TYPE "AbdmConsentStatus" AS ENUM ('REQUESTED', 'GRANTED', 'DENIED', 'EXPIRED', 'REVOKED');
 
 -- CreateEnum
 CREATE TYPE "VitalsSource" AS ENUM ('MANUAL_ENTRY', 'CLINIC_MEASUREMENT', 'IMPORTED', 'WEARABLE_DEVICE');
-
--- CreateEnum
-CREATE TYPE "CervicalMucus" AS ENUM ('NONE', 'STICKY', 'CREAMY', 'WATERY', 'EGGWHITE');
-
--- CreateEnum
-CREATE TYPE "ReproductiveCondition" AS ENUM ('PCOS', 'ENDOMETRIOSIS', 'THYROID_DISORDER', 'FIBROIDS', 'ADENOMYOSIS', 'PREMATURE_OVARIAN_FAILURE', 'NONE');
-
--- CreateEnum
-CREATE TYPE "MoodLevel" AS ENUM ('VERY_HAPPY', 'HAPPY', 'NEUTRAL', 'SAD', 'VERY_SAD', 'ANXIOUS', 'IRRITABLE');
-
--- CreateEnum
-CREATE TYPE "PainLevel" AS ENUM ('NONE', 'MILD', 'MODERATE', 'SEVERE', 'UNBEARABLE');
-
--- CreateEnum
-CREATE TYPE "FlowType" AS ENUM ('SPOTTING', 'LIGHT', 'MEDIUM', 'HEAVY', 'VERY_HEAVY');
-
--- CreateEnum
-CREATE TYPE "MenopauseSymptom" AS ENUM ('HOT_FLASHES', 'NIGHT_SWEATS', 'INSOMNIA', 'MOOD_SWINGS', 'BRAIN_FOG', 'VAGINAL_DRYNESS', 'JOINT_PAIN', 'WEIGHT_GAIN');
 
 -- CreateEnum
 CREATE TYPE "PregnancyStatus" AS ENUM ('TRYING_TO_CONCEIVE', 'PREGNANT', 'POSTPARTUM', 'NOT_PREGNANT');
@@ -70,16 +31,43 @@ CREATE TYPE "DeliveryOutcome" AS ENUM ('LIVE_BIRTH', 'STILLBIRTH', 'MISCARRIAGE'
 CREATE TYPE "DeliveryMethod" AS ENUM ('VAGINAL_NORMAL', 'VAGINAL_ASSISTED', 'CESAREAN_PLANNED', 'CESAREAN_EMERGENCY');
 
 -- CreateEnum
-CREATE TYPE "PeriodFlowIntensity" AS ENUM ('SPOTTING', 'LIGHT', 'MEDIUM', 'HEAVY');
-
--- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
-
--- CreateEnum
 CREATE TYPE "VaccineStatus" AS ENUM ('UPCOMING', 'OVERDUE', 'ADMINISTERED', 'SKIPPED', 'DEFERRED');
 
 -- CreateEnum
 CREATE TYPE "MilestoneCategory" AS ENUM ('MOTOR_GROSS', 'MOTOR_FINE', 'LANGUAGE', 'COGNITIVE', 'SOCIAL', 'EMOTIONAL');
+
+-- CreateEnum
+CREATE TYPE "ReproductiveUserGoal" AS ENUM ('TRYING_TO_CONCEIVE', 'AVOIDING_PREGNANCY', 'TRACKING_ONLY');
+
+-- CreateEnum
+CREATE TYPE "ReproductiveCondition" AS ENUM ('PCOS', 'ENDOMETRIOSIS', 'THYROID_DISORDER', 'FIBROIDS', 'ADENOMYOSIS', 'PREMATURE_OVARIAN_FAILURE', 'NONE');
+
+-- CreateEnum
+CREATE TYPE "BBTSource" AS ENUM ('MANUAL_ENTRY', 'ORAL_THERMOMETER', 'WEARABLE', 'VAGINAL_SENSOR');
+
+-- CreateEnum
+CREATE TYPE "CyclePhase" AS ENUM ('MENSTRUAL', 'FOLLICULAR', 'OVULATION', 'LUTEAL');
+
+-- CreateEnum
+CREATE TYPE "OvulationMethod" AS ENUM ('BBT', 'LH_TEST', 'CERVICAL_MUCUS', 'CALENDAR', 'ULTRASOUND', 'WEARABLE');
+
+-- CreateEnum
+CREATE TYPE "FlowType" AS ENUM ('SPOTTING', 'LIGHT', 'MEDIUM', 'HEAVY', 'VERY_HEAVY');
+
+-- CreateEnum
+CREATE TYPE "CervicalMucus" AS ENUM ('NONE', 'STICKY', 'CREAMY', 'WATERY', 'EGGWHITE');
+
+-- CreateEnum
+CREATE TYPE "PainLevel" AS ENUM ('NONE', 'MILD', 'MODERATE', 'SEVERE', 'UNBEARABLE');
+
+-- CreateEnum
+CREATE TYPE "MoodLevel" AS ENUM ('VERY_HAPPY', 'HAPPY', 'NEUTRAL', 'SAD', 'VERY_SAD', 'ANXIOUS', 'IRRITABLE');
+
+-- CreateEnum
+CREATE TYPE "MenopauseSymptom" AS ENUM ('HOT_FLASHES', 'NIGHT_SWEATS', 'INSOMNIA', 'MOOD_SWINGS', 'BRAIN_FOG', 'VAGINAL_DRYNESS', 'JOINT_PAIN', 'WEIGHT_GAIN');
+
+-- CreateEnum
+CREATE TYPE "PeriodFlowIntensity" AS ENUM ('SPOTTING', 'LIGHT', 'MEDIUM', 'HEAVY');
 
 -- CreateEnum
 CREATE TYPE "MedicalDocumentType" AS ENUM ('LAB_REPORT', 'ULTRASOUND', 'PRESCRIPTION', 'DISCHARGE_SUMMARY', 'XRAY', 'MRI', 'CT_SCAN', 'VACCINATION_CERTIFICATE', 'INSURANCE_DOCUMENT', 'OTHER');
@@ -92,6 +80,12 @@ CREATE TYPE "MedicationFrequency" AS ENUM ('ONCE_DAILY', 'TWICE_DAILY', 'THRICE_
 
 -- CreateEnum
 CREATE TYPE "MeetingProvider" AS ENUM ('AWS_CHIME', 'TWILIO', 'ZOOM', 'GOOGLE_MEET', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "RelationType" AS ENUM ('PARTNER', 'GUARDIAN', 'CAREGIVER', 'SIBLING', 'FRIEND');
+
+-- CreateEnum
+CREATE TYPE "EmergencyType" AS ENUM ('LABOR_STARTED', 'HEAVY_BLEEDING', 'SEVERE_PAIN', 'MEDICAL_EMERGENCY', 'SAFETY_CONCERN');
 
 -- CreateEnum
 CREATE TYPE "PostCategory" AS ENUM ('PREGNANCY_JOURNEY', 'HEALTH_TIPS', 'NUTRITION', 'MENTAL_HEALTH', 'ASK_DOCTOR', 'PARENTING', 'CHILD_DEVELOPMENT', 'MENOPAUSE', 'FERTILITY', 'GENERAL');
@@ -130,21 +124,6 @@ CREATE TYPE "MessageType" AS ENUM ('TEXT', 'IMAGE', 'DOCUMENT', 'VOICE_NOTE', 'V
 CREATE TYPE "MessageStatus" AS ENUM ('SENT', 'DELIVERED', 'READ', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('PILL_REMINDER', 'OVULATION_ALERT', 'PERIOD_PREDICTION', 'APPOINTMENT_REMINDER', 'VACCINE_DUE', 'GROWTH_CHECKUP', 'WATER_REMINDER', 'EXERCISE_REMINDER', 'CYCLE_IRREGULARITY', 'PARTNER_ALERT', 'PAYMENT_RECEIVED', 'PAYOUT_PROCESSED', 'GENERAL');
-
--- CreateEnum
-CREATE TYPE "NotificationChannel" AS ENUM ('PUSH', 'EMAIL', 'SMS', 'WHATSAPP');
-
--- CreateEnum
-CREATE TYPE "ContentCategory" AS ENUM ('MENSTRUAL_HEALTH', 'FERTILITY', 'PREGNANCY', 'POSTPARTUM', 'CHILD_CARE', 'MENOPAUSE', 'NUTRITION', 'MENTAL_HEALTH', 'REPRODUCTIVE_DISORDERS');
-
--- CreateEnum
-CREATE TYPE "ContentDifficulty" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'ADVANCED');
-
--- CreateEnum
-CREATE TYPE "EmergencyType" AS ENUM ('LABOR_STARTED', 'HEAVY_BLEEDING', 'SEVERE_PAIN', 'MEDICAL_EMERGENCY', 'SAFETY_CONCERN');
-
--- CreateEnum
 CREATE TYPE "AuditAction" AS ENUM ('CREATE', 'UPDATE', 'DELETE', 'VIEW', 'EXPORT', 'SHARE', 'CONSENT_GRANTED', 'CONSENT_REVOKED', 'LOGIN', 'LOGOUT');
 
 -- CreateEnum
@@ -152,6 +131,39 @@ CREATE TYPE "AuditEntityType" AS ENUM ('USER', 'VITALS_RECORD', 'PREGNANCY_JOURN
 
 -- CreateEnum
 CREATE TYPE "FollowStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
+
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('PATIENT', 'DOCTOR');
+
+-- CreateEnum
+CREATE TYPE "OtpPurpose" AS ENUM ('REGISTRATION', 'LOGIN', 'PHONE_VERIFICATION', 'PASSWORD_RESET', 'TWO_FACTOR_AUTH');
+
+-- CreateEnum
+CREATE TYPE "CountryCode" AS ENUM ('IN', 'US', 'GB');
+
+-- CreateEnum
+CREATE TYPE "Theme" AS ENUM ('LIGHT', 'DARK', 'SYSTEM');
+
+-- CreateEnum
+CREATE TYPE "PreferredLanguage" AS ENUM ('ENGLISH', 'HINDI', 'TAMIL');
+
+-- CreateEnum
+CREATE TYPE "ActivityType" AS ENUM ('LOGIN', 'VITALS_ENTRY', 'APPOINTMENT_BOOKED', 'STREAK_COMPLETED', 'POST_CREATED', 'MESSAGE_SENT', 'MILESTONE_ACHIEVED', 'VACCINE_ADMINISTERED', 'DAILY_LOG_COMPLETED', 'ARTICLE_READ', 'VIDEO_WATCHED', 'REEL_POSTED');
+
+-- CreateEnum
+CREATE TYPE "LifeStage" AS ENUM ('PUBERTY', 'REPRODUCTIVE', 'PERIMENOPAUSE', 'POSTMENOPAUSE');
+
+-- CreateEnum
+CREATE TYPE "MedicalCouncil" AS ENUM ('MCI', 'NMC', 'STATE_COUNCIL');
+
+-- CreateEnum
+CREATE TYPE "DoctorSpecialization" AS ENUM ('OBSTETRICIAN_GYNECOLOGIST', 'GYNECOLOGIST', 'MATERNAL_FETAL_MEDICINE', 'PEDIATRICIAN', 'GENERAL_PRACTITIONER', 'NEONATOLOGIST', 'CHILD_SPECIALIST', 'ENDOCRINOLOGIST', 'NUTRITIONIST', 'MENTAL_HEALTH');
+
+-- CreateEnum
+CREATE TYPE "ConsultationType" AS ENUM ('IN_PERSON', 'VIDEO', 'CHAT', 'PHONE');
+
+-- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateTable
 CREATE TABLE "notification_preferences" (
@@ -284,25 +296,6 @@ CREATE TABLE "fetal_movement_records" (
 );
 
 -- CreateTable
-CREATE TABLE "period_cycles" (
-    "id" VARCHAR(21) NOT NULL,
-    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
-    "userId" TEXT NOT NULL,
-    "startDate" DATE NOT NULL,
-    "endDate" DATE,
-    "cycleLength" INTEGER,
-    "periodDuration" INTEGER,
-    "flowIntensity" "PeriodFlowIntensity",
-    "symptomsAndMood" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "cervicalMucus" "CervicalMucus",
-    "basalBodyTemperature" DECIMAL(4,2),
-    "notes" TEXT,
-
-    CONSTRAINT "period_cycles_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "abdm_consents" (
     "id" VARCHAR(21) NOT NULL,
     "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -418,6 +411,13 @@ CREATE TABLE "reproductive_profiles" (
     "averageCycleLength" DECIMAL(4,1),
     "shortestCycle" INTEGER,
     "longestCycle" INTEGER,
+    "reproductiveGoal" "ReproductiveUserGoal" DEFAULT 'TRACKING_ONLY',
+    "lutealPhaseLength" INTEGER,
+    "averagePeriodDuration" INTEGER,
+    "lastRegularityAnalysis" JSONB,
+    "lastRegularityCalculatedAt" TIMESTAMPTZ(3),
+    "lastBBTAnalysis" JSONB,
+    "lastBBTAnalysisCalculatedAt" TIMESTAMPTZ(3),
     "diagnosedConditions" "ReproductiveCondition"[] DEFAULT ARRAY['NONE']::"ReproductiveCondition"[],
     "diagnosisDate" DATE,
     "treatingDoctorId" TEXT,
@@ -443,6 +443,7 @@ CREATE TABLE "daily_health_logs" (
     "painLevel" "PainLevel",
     "painLocations" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "basalBodyTemp" DECIMAL(4,2),
+    "basalBodyTempSource" "BBTSource" DEFAULT 'MANUAL_ENTRY',
     "mood" "MoodLevel",
     "energyLevel" INTEGER,
     "sleepQuality" INTEGER,
@@ -474,10 +475,38 @@ CREATE TABLE "cycle_predictions" (
     "predictionMethod" VARCHAR(100) NOT NULL,
     "fertilityWindowStart" DATE,
     "fertilityWindowEnd" DATE,
+    "fertileWindowData" JSONB,
+    "bestConceptionDay1" DATE,
+    "bestConceptionDay2" DATE,
+    "currentCyclePhase" "CyclePhase",
+    "daysUntilOvulation" INTEGER,
     "startDateError" INTEGER,
     "ovulationDateError" INTEGER,
 
     CONSTRAINT "cycle_predictions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "period_cycles" (
+    "id" VARCHAR(21) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+    "startDate" DATE NOT NULL,
+    "endDate" DATE,
+    "cycleLength" INTEGER,
+    "periodDuration" INTEGER,
+    "flowIntensity" "PeriodFlowIntensity",
+    "flowMeetsDay1Threshold" BOOLEAN NOT NULL DEFAULT true,
+    "symptomsAndMood" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "cervicalMucus" "CervicalMucus",
+    "basalBodyTemperature" DECIMAL(4,2),
+    "ovulationDetected" BOOLEAN DEFAULT false,
+    "ovulationDate" DATE,
+    "ovulationMethod" "OvulationMethod",
+    "notes" TEXT,
+
+    CONSTRAINT "period_cycles_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1102,9 +1131,6 @@ CREATE INDEX "vitals_records_recordedAt_idx" ON "vitals_records"("recordedAt");
 CREATE INDEX "fetal_movement_records_journeyId_recordedAt_idx" ON "fetal_movement_records"("journeyId", "recordedAt");
 
 -- CreateIndex
-CREATE INDEX "period_cycles_userId_startDate_idx" ON "period_cycles"("userId", "startDate");
-
--- CreateIndex
 CREATE UNIQUE INDEX "abdm_consents_consentHandle_key" ON "abdm_consents"("consentHandle");
 
 -- CreateIndex
@@ -1159,6 +1185,9 @@ CREATE UNIQUE INDEX "reproductive_profiles_userId_key" ON "reproductive_profiles
 CREATE INDEX "reproductive_profiles_userId_idx" ON "reproductive_profiles"("userId");
 
 -- CreateIndex
+CREATE INDEX "reproductive_profiles_reproductiveGoal_idx" ON "reproductive_profiles"("reproductiveGoal");
+
+-- CreateIndex
 CREATE INDEX "daily_health_logs_userId_logDate_idx" ON "daily_health_logs"("userId", "logDate");
 
 -- CreateIndex
@@ -1172,6 +1201,15 @@ CREATE INDEX "cycle_predictions_userId_predictedStartDate_idx" ON "cycle_predict
 
 -- CreateIndex
 CREATE INDEX "cycle_predictions_predictedStartDate_idx" ON "cycle_predictions"("predictedStartDate");
+
+-- CreateIndex
+CREATE INDEX "cycle_predictions_currentCyclePhase_idx" ON "cycle_predictions"("currentCyclePhase");
+
+-- CreateIndex
+CREATE INDEX "period_cycles_userId_startDate_idx" ON "period_cycles"("userId", "startDate");
+
+-- CreateIndex
+CREATE INDEX "period_cycles_ovulationDate_idx" ON "period_cycles"("ovulationDate");
 
 -- CreateIndex
 CREATE INDEX "prescriptions_patientId_idx" ON "prescriptions"("patientId");
@@ -1513,9 +1551,6 @@ ALTER TABLE "vitals_records" ADD CONSTRAINT "vitals_records_userId_fkey" FOREIGN
 ALTER TABLE "fetal_movement_records" ADD CONSTRAINT "fetal_movement_records_journeyId_fkey" FOREIGN KEY ("journeyId") REFERENCES "pregnancy_journeys"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "period_cycles" ADD CONSTRAINT "period_cycles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "abdm_consents" ADD CONSTRAINT "abdm_consents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1541,6 +1576,9 @@ ALTER TABLE "daily_health_logs" ADD CONSTRAINT "daily_health_logs_userId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "cycle_predictions" ADD CONSTRAINT "cycle_predictions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "period_cycles" ADD CONSTRAINT "period_cycles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "prescriptions" ADD CONSTRAINT "prescriptions_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1661,7 +1699,6 @@ ALTER TABLE "doctor_availability" ADD CONSTRAINT "doctor_availability_doctorId_f
 
 -- AddForeignKey
 ALTER TABLE "doctor_availability" ADD CONSTRAINT "doctor_availability_clinicId_fkey" FOREIGN KEY ("clinicId") REFERENCES "clinics"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
 
 -- For Posts (HNSW index is best for performance/recall balance)
 CREATE INDEX "posts_embedding_idx" ON "posts" USING hnsw ("contentEmbedding" vector_cosine_ops);

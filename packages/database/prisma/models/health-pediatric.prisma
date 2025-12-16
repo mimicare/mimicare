@@ -140,3 +140,20 @@ model MilestoneRecord {
   @@index([isDelayed])
   @@map("milestone_records")
 }
+
+enum VaccineStatus {
+  UPCOMING
+  OVERDUE
+  ADMINISTERED
+  SKIPPED
+  DEFERRED
+}
+
+enum MilestoneCategory {
+  MOTOR_GROSS
+  MOTOR_FINE
+  LANGUAGE
+  COGNITIVE
+  SOCIAL
+  EMOTIONAL
+}

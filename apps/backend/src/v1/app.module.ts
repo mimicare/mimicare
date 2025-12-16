@@ -5,6 +5,7 @@ import { V1ServerModule } from './server/server.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from '../common/guards/auth';
 import { V1ProfileModule } from './profile/profile.module';
+import { V1ReproductiveModule } from './reproductive/reproductive.module';
 @Module({
   imports: [
     // ALL your V1 modules
@@ -12,6 +13,7 @@ import { V1ProfileModule } from './profile/profile.module';
     // V1UserModule,
     V1ServerModule,
     V1ProfileModule,
+    V1ReproductiveModule,
   ],
   providers: [
     {
@@ -24,6 +26,7 @@ import { V1ProfileModule } from './profile/profile.module';
     V1ServerModule,
     V1AuthModule,
     V1ProfileModule,
+    V1ReproductiveModule,
   ],
 })
 export class V1AppModule {}

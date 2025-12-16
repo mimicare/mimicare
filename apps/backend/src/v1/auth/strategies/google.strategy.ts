@@ -2,13 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import {
   Strategy,
-  Profile,
-  VerifyCallback,
-  StrategyOptionsWithRequest,
+  type Profile,
+  type VerifyCallback,
+  type StrategyOptionsWithRequest,
 } from 'passport-google-oauth20';
-import { ConfigService } from '@nestjs/config';
-import { V1AuthService } from '../auth.service';
-import { Request } from 'express';
+import { type ConfigService } from '@nestjs/config';
+import { type V1AuthService } from '../auth.service';
+import { type Request } from 'express';
 import { UAParser } from 'ua-parser-js';
 
 /**

@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -90,6 +90,16 @@ describe('V1AuthService', () => {
 
   const mockConfigService = {
     get: jest.fn((key: string) => {
+      const config: Record<string, string> = {
+        JWT_ACCESS_TOKEN_SECRET: 'test-access-secret',
+        JWT_REFRESH_TOKEN_SECRET: 'test-refresh-secret',
+        JWT_ACCESS_TOKEN_EXPIRATION: '15m',
+        JWT_REFRESH_TOKEN_EXPIRATION: '7d',
+        FRONTEND_URL: 'http://localhost:5173',
+      };
+      return config[key];
+    }),
+    getOrThrow: jest.fn((key: string) => {
       const config: Record<string, string> = {
         JWT_ACCESS_TOKEN_SECRET: 'test-access-secret',
         JWT_REFRESH_TOKEN_SECRET: 'test-refresh-secret',

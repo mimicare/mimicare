@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { V1ProfileController } from './profile.controller';
 import { V1ProfileService } from './profile.service';
 import { Gender, LifeStage } from '@mimicare/schema';

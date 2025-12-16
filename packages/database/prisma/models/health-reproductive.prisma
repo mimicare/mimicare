@@ -17,6 +17,19 @@ model ReproductiveProfile {
   shortestCycle      Int?
   longestCycle       Int?
 
+  // User Goal & Preferences
+  // FHIR: Goal.lifecycleStatus, Goal.description
+  reproductiveGoal      ReproductiveUserGoal? @default(TRACKING_ONLY)
+  lutealPhaseLength     Int?
+  averagePeriodDuration Int?
+
+  // Cached Analysis Results
+  // FHIR: RiskAssessment.prediction, Observation.interpretation
+  lastRegularityAnalysis      Json?     @db.JsonB
+  lastRegularityCalculatedAt  DateTime? @db.Timestamptz(3)
+  lastBBTAnalysis             Json?     @db.JsonB
+  lastBBTAnalysisCalculatedAt DateTime? @db.Timestamptz(3)
+
   // Diagnosed Conditions
   // FHIR: Condition
   diagnosedConditions ReproductiveCondition[] @default([NONE])
@@ -34,6 +47,7 @@ model ReproductiveProfile {
   stressLevel        String? @db.VarChar(50)
 
   @@index([userId])
+  @@index([reproductiveGoal])
   @@map("reproductive_profiles")
 }
 
@@ -57,7 +71,8 @@ model DailyHealthLog {
 
   // Basal Body Temperature
   // FHIR: Observation.valueQuantity
-  basalBodyTemp Decimal? @db.Decimal(4, 2)
+  basalBodyTemp       Decimal?   @db.Decimal(4, 2)
+  basalBodyTempSource BBTSource? @default(MANUAL_ENTRY)
 
   // Emotional/Mental Health
   // FHIR: Observation (Mental Status)
@@ -107,12 +122,21 @@ model CyclePrediction {
   actualEndDate       DateTime? @db.Date
 
   // Confidence & Accuracy
-  confidenceLevel  Int? // 0-100%
+  confidenceLevel  Int?
   predictionMethod String @db.VarChar(100)
 
   // Fertility Window
   fertilityWindowStart DateTime? @db.Date
   fertilityWindowEnd   DateTime? @db.Date
+  fertileWindowData    Json?     @db.JsonB
+
+  // Best Conception Days
+  bestConceptionDay1 DateTime? @db.Date
+  bestConceptionDay2 DateTime? @db.Date
+
+  // Cycle Phase Tracking
+  currentCyclePhase  CyclePhase?
+  daysUntilOvulation Int?
 
   // Accuracy Tracking
   startDateError     Int?
@@ -120,5 +144,134 @@ model CyclePrediction {
 
   @@index([userId, predictedStartDate])
   @@index([predictedStartDate])
+  @@index([currentCyclePhase])
   @@map("cycle_predictions")
+}
+
+model PeriodCycle {
+  id        String   @id @default(nanoid()) @db.VarChar(21)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FHIR: Observation.effectivePeriod
+  startDate      DateTime  @db.Date
+  endDate        DateTime? @db.Date
+  cycleLength    Int?
+  periodDuration Int?
+
+  // Flow & Fertility Tracking
+  flowIntensity          PeriodFlowIntensity?
+  flowMeetsDay1Threshold Boolean              @default(true)
+  symptomsAndMood        String[]             @default([])
+  cervicalMucus          CervicalMucus?
+  basalBodyTemperature   Decimal?             @db.Decimal(4, 2)
+
+  // Ovulation Detection
+  ovulationDetected Boolean?         @default(false)
+  ovulationDate     DateTime?        @db.Date
+  ovulationMethod   OvulationMethod?
+
+  notes String? @db.Text
+
+  @@index([userId, startDate])
+  @@index([ovulationDate])
+  @@map("period_cycles")
+}
+
+// ==========================================
+// REPRODUCTIVE HEALTH ENUMS
+// ==========================================
+
+enum ReproductiveUserGoal {
+  TRYING_TO_CONCEIVE
+  AVOIDING_PREGNANCY
+  TRACKING_ONLY
+}
+
+enum ReproductiveCondition {
+  PCOS
+  ENDOMETRIOSIS
+  THYROID_DISORDER
+  FIBROIDS
+  ADENOMYOSIS
+  PREMATURE_OVARIAN_FAILURE
+  NONE
+}
+
+enum BBTSource {
+  MANUAL_ENTRY
+  ORAL_THERMOMETER
+  WEARABLE
+  VAGINAL_SENSOR
+}
+
+enum CyclePhase {
+  MENSTRUAL
+  FOLLICULAR
+  OVULATION
+  LUTEAL
+}
+
+enum OvulationMethod {
+  BBT
+  LH_TEST
+  CERVICAL_MUCUS
+  CALENDAR
+  ULTRASOUND
+  WEARABLE
+}
+
+enum FlowType {
+  SPOTTING
+  LIGHT
+  MEDIUM
+  HEAVY
+  VERY_HEAVY
+}
+
+enum CervicalMucus {
+  NONE
+  STICKY
+  CREAMY
+  WATERY
+  EGGWHITE
+}
+
+enum PainLevel {
+  NONE
+  MILD
+  MODERATE
+  SEVERE
+  UNBEARABLE
+}
+
+enum MoodLevel {
+  VERY_HAPPY
+  HAPPY
+  NEUTRAL
+  SAD
+  VERY_SAD
+  ANXIOUS
+  IRRITABLE
+}
+
+enum MenopauseSymptom {
+  HOT_FLASHES
+  NIGHT_SWEATS
+  INSOMNIA
+  MOOD_SWINGS
+  BRAIN_FOG
+  VAGINAL_DRYNESS
+  JOINT_PAIN
+  WEIGHT_GAIN
+}
+
+enum PeriodFlowIntensity {
+  SPOTTING
+  LIGHT
+  MEDIUM
+  HEAVY
 }

@@ -1,15 +1,15 @@
 import {
   Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
+  type NestInterceptor,
+  type ExecutionContext,
+  type CallHandler,
   HttpStatus,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Reflector } from '@nestjs/core';
-import { PAGINATE_METADATA_KEY, PaginateOptions } from '../decorators/common';
-import { Response } from 'express';
+import { type Reflector } from '@nestjs/core';
+import { PAGINATE_METADATA_KEY, type PaginateOptions } from '../decorators/common';
+import { type Response } from 'express';
 
 interface ApiResponse<T> {
   statusCode: number;
