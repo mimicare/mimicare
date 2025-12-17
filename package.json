@@ -30,7 +30,7 @@
     "test:backend": "yarn workspace @mimicare/backend test",
     "test:e2e": "yarn workspace @mimicare/backend test:e2e",
     "clean": "turbo run clean && rimraf node_modules .turbo",
-    "clean:all": "yarn clean && rimraf **/node_modules **/.turbo **/dist",
+    "clean:all": "yarn clean && rimraf \"**/node_modules\" \"**/.turbo\" \"**/dist\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
     "db:generate": "yarn workspace @mimicare/schema db:generate",
