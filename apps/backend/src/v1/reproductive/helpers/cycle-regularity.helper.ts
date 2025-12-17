@@ -2,10 +2,12 @@ import { REPRODUCTIVE_CONSTANTS } from '../constants/reproductive.constants';
 
 /**
  * ============================================================================
- * CYCLE REGULARITY ANALYSIS HELPER - PRODUCTION VERSION 1.1.0
+ * CYCLE REGULARITY ANALYSIS HELPER - PRODUCTION VERSION 1.1.1
  * ============================================================================
  *
  * Analyze menstrual cycle regularity and variability with age-adjusted thresholds
+ *
+ *
  *
  * ============================================================================
  * CLINICAL BACKGROUND & MEDICAL VALIDATION
@@ -47,79 +49,79 @@ import { REPRODUCTIVE_CONSTANTS } from '../constants/reproductive.constants';
  * ============================================================================
  *
  * [1] Munro MG, Critchley HOD, Fraser IS, FIGO Menstrual Disorders Committee.
- *     "The two FIGO systems for normal and abnormal uterine bleeding symptoms
- *     and classification of causes of abnormal uterine bleeding in the
- *     reproductive years: 2018 revisions"
- *     International Journal of Gynaecology and Obstetrics, 2018 Dec; 143(3):393-408
- *     PMID: 30198563
- *     DOI: 10.1002/ijgo.12666
- *     URL: https://obgyn.onlinelibrary.wiley.com/doi/10.1002/ijgo.12666
- *     Key Finding: Normal cycle 24-38 days, modern terminology for bleeding disorders
+ * "The two FIGO systems for normal and abnormal uterine bleeding symptoms
+ * and classification of causes of abnormal uterine bleeding in the
+ * reproductive years: 2018 revisions"
+ * International Journal of Gynaecology and Obstetrics, 2018 Dec; 143(3):393-408
+ * PMID: 30198563
+ * DOI: 10.1002/ijgo.12666
+ * URL: https://obgyn.onlinelibrary.wiley.com/doi/10.1002/ijgo.12666
+ * Key Finding: Normal cycle 24-38 days, modern terminology for bleeding disorders
  *
  * [2] Thiyagarajan DK, Basit H, Jeanmonod R. "Physiology, Menstrual Cycle"
- *     StatPearls [Internet], Treasure Island (FL): StatPearls Publishing; 2024 Sep
- *     PMID: 29763196
- *     URL: https://www.ncbi.nlm.nih.gov/books/NBK500020/
- *     Key Finding: FIGO 2020 guidelines - regularity ≤7 days (26-41), ≤9 days (≤25, 42-45)
+ * StatPearls [Internet], Treasure Island (FL): StatPearls Publishing; 2024 Sep
+ * PMID: 29763196
+ * URL: https://www.ncbi.nlm.nih.gov/books/NBK500020/
+ * Key Finding: FIGO 2020 guidelines - regularity ≤7 days (26-41), ≤9 days (≤25, 42-45)
  *
  * [3] Wang YX, Stuart JJ, Rich-Edwards JW, et al. "Menstrual Cycle Regularity
- *     and Length Across the Reproductive Lifespan and Risk of Cardiovascular Disease"
- *     JAMA Network Open, 2022 Oct; 5(10):e2238513
- *     PMID: 36287592
- *     PMC: PMC9608555
- *     DOI: 10.1001/jamanetworkopen.2022.38513
- *     URL: https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2797622
- *     Key Finding: Irregular cycles → 40% ↑ CVD (HR 1.40, 95% CI 1.14-1.71)
- *     Cohort: 80,630 women, 24-year follow-up (Nurses' Health Study II)
+ * and Length Across the Reproductive Lifespan and Risk of Cardiovascular Disease"
+ * JAMA Network Open, 2022 Oct; 5(10):e2238513
+ * PMID: 36287592
+ * PMC: PMC9608555
+ * DOI: 10.1001/jamanetworkopen.2022.38513
+ * URL: https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2797622
+ * Key Finding: Irregular cycles → 40% ↑ CVD (HR 1.40, 95% CI 1.14-1.71)
+ * Cohort: 80,630 women, 24-year follow-up (Nurses' Health Study II)
  *
  * [4] Lenton EA, Landgren BM, Sexton L. "Normal variation in the length of
- *     the luteal phase of the menstrual cycle: identification of the short luteal phase"
- *     British Journal of Obstetrics and Gynaecology, 1984 Jul; 91(7):685-9
- *     PMID: 6743610
- *     DOI: 10.1111/j.1471-0528.1984.tb04830.x
- *     URL: https://pubmed.ncbi.nlm.nih.gov/6743610/
- *     Key Finding: Luteal phase = 14.13 ± 1.41 days (more consistent than follicular)
+ * the luteal phase of the menstrual cycle: identification of the short luteal phase"
+ * British Journal of Obstetrics and Gynaecology, 1984 Jul; 91(7):685-9
+ * PMID: 6743610
+ * DOI: 10.1111/j.1471-0528.1984.tb04830.x
+ * URL: https://pubmed.ncbi.nlm.nih.gov/6743610/
+ * Key Finding: Luteal phase = 14.13 ± 1.41 days (more consistent than follicular)
  *
  * [5] Fehring RJ, Schneider M, Raviele K. "Variability in the Phases of the Menstrual Cycle"
- *     Journal of Obstetric, Gynecologic & Neonatal Nursing, 2006 May-Jun; 35(3):376-84
- *     PMID: 16700687
- *     DOI: 10.1111/j.1552-6909.2006.00051.x
- *     URL: https://epublications.marquette.edu/nursing_fac/11/
- *     Key Finding: Follicular phase contributes most to cycle length variation
+ * Journal of Obstetric, Gynecologic & Neonatal Nursing, 2006 May-Jun; 35(3):376-84
+ * PMID: 16700687
+ * DOI: 10.1111/j.1552-6909.2006.00051.x
+ * URL: https://epublications.marquette.edu/nursing_fac/11/
+ * Key Finding: Follicular phase contributes most to cycle length variation
  *
  * [6] Jain V, Chodankar RR, Maybin JA, Critchley HOD. "Menstrual Cycle Disturbances"
- *     International Journal of Gynaecology and Obstetrics, 2023 Jan; 160 Suppl 1:68-74
- *     PMID: 36637030
- *     PMC: PMC10108264
- *     DOI: 10.1002/ijgo.14946
- *     URL: https://obgyn.onlinelibrary.wiley.com/doi/10.1002/ijgo.14946
- *     Key Finding: Abnormal frequency <24 days (frequent) or >38 days (infrequent)
+ * International Journal of Gynaecology and Obstetrics, 2023 Jan; 160 Suppl 1:68-74
+ * PMID: 36637030
+ * PMC: PMC10108264
+ * DOI: 10.1002/ijgo.14946
+ * URL: https://obgyn.onlinelibrary.wiley.com/doi/10.1002/ijgo.14946
+ * Key Finding: Abnormal frequency <24 days (frequent) or >38 days (infrequent)
  *
  * [7] Popescu MA, et al. "Menstrual Disorders: Practical Approach"
- *     Romanian Medical Journal, 2021 Dec; 68(Suppl 6):44-49
- *     URL: https://rmj.com.ro/articles/2021.S6/RMJ_2021_Suppl6_Art-08.pdf
- *     Key Finding: Cycle variation >20 days = irregular (FOGSI consensus)
+ * Romanian Medical Journal, 2021 Dec; 68(Suppl 6):44-49
+ * URL: https://rmj.com.ro/articles/2021.S6/RMJ_2021_Suppl6_Art-08.pdf
+ * Key Finding: Cycle variation >20 days = irregular (FOGSI consensus)
  *
  * [8] Solomon CG, Hu FB, Dunaif A, et al. "Long or highly irregular menstrual
- *     cycles as a marker for risk of type 2 diabetes mellitus"
- *     JAMA, 2001 Nov; 286(19):2421-6
- *     PMID: 11712937
- *     DOI: 10.1001/jama.286.19.2421
- *     Key Finding: PCOS affects 10% of women, causes metabolic dysfunction
+ * cycles as a marker for risk of type 2 diabetes mellitus"
+ * JAMA, 2001 Nov; 286(19):2421-6
+ * PMID: 11712937
+ * DOI: 10.1001/jama.286.19.2421
+ * Key Finding: PCOS affects 10% of women, causes metabolic dysfunction
  *
  * [9] Li J, Eriksson M, Czene K, Hall P, Rodriguez-Wallberg KA. "Common diseases
- *     as determinants of menopausal age"
- *     Human Reproduction, 2016 Dec; 31(12):2856-2864
- *     PMID: 27798044
- *     PMC: PMC5850732
- *     DOI: 10.1093/humrep/dew264
- *     Key Finding: Cycle irregularity associated with cardiovascular comorbidities
+ * as determinants of menopausal age"
+ * Human Reproduction, 2016 Dec; 31(12):2856-2864
+ * PMID: 27798044
+ * PMC: PMC5850732
+ * DOI: 10.1093/humrep/dew264
+ * Key Finding: Cycle irregularity associated with cardiovascular comorbidities
  *
  * [10] American College of Obstetricians and Gynecologists. "Menstruation in
- *      Girls and Adolescents: Using the Menstrual Cycle as a Vital Sign"
- *      Committee Opinion No. 651, 2015 Dec (Reaffirmed 2023)
- *      URL: https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2015/12/menstruation-in-girls-and-adolescents
- *      Key Finding: First gynecological year post-menarche: variability normal
+ * Girls and Adolescents: Using the Menstrual Cycle as a Vital Sign"
+ * Committee Opinion No. 651, 2015 Dec (Reaffirmed 2023)
+ * URL: https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2015/12/menstruation-in-girls-and-adolescents
+ * Key Finding: First gynecological year post-menarche: variability normal
  *
  * ============================================================================
  * ALGORITHM METHODOLOGY
@@ -158,6 +160,10 @@ import { REPRODUCTIVE_CONSTANTS } from '../constants/reproductive.constants';
  * VERSION HISTORY
  * ============================================================================
  *
+ * v1.1.1 (2025-12-17):
+ * - **FIX**: `classifyCycleRegularity` now accepts dynamic `threshold` to correctly
+ * classify adolescent/perimenopausal cycles (9-day variation) as REGULAR instead of IRREGULAR.
+ *
  * v1.1.0 (2025-12-16):
  * - **CRITICAL FIX**: Adolescent age handling (ages <18 now get 9-day threshold) [Ref 10]
  * - **NEW**: Outlier-robust variability calculation (trims 1 outlier if ≥6 cycles)
@@ -179,7 +185,7 @@ import { REPRODUCTIVE_CONSTANTS } from '../constants/reproductive.constants';
  * ============================================================================
  *
  * Author: Mimicare Development Team
- * Last Updated: 2025-12-16
+ * Last Updated: 2025-12-17
  * Review Cycle: Annual medical accuracy validation
  * Contact: For medical accuracy concerns, consult OBGYN medical advisory board
  *
@@ -368,7 +374,9 @@ export function analyzeCycleRegularity(
   // ============================================================================
 
   const regularityThreshold = getRegularityThreshold(userAge);
-  const classification = classifyCycleRegularity(variability);
+
+  // FIXED v1.1.1: Pass threshold to classifier to handle adolescents correctly
+  const classification = classifyCycleRegularity(variability, regularityThreshold);
   const isRegular = variability <= regularityThreshold;
 
   // ============================================================================
@@ -417,8 +425,8 @@ export function analyzeCycleRegularity(
  *
  * Medical Rationale [Ref 2, 10]:
  * - Ages ≤25: Cycles stabilizing post-menarche (allow 9 days variation)
- *   - Includes adolescents (13-17) per ACOG Opinion 651 [Ref 10]
- *   - HPO axis still maturing, greater variability normal
+ * - Includes adolescents (13-17) per ACOG Opinion 651 [Ref 10]
+ * - HPO axis still maturing, greater variability normal
  * - Ages 26-41: Prime reproductive years (standard 7 days variation)
  * - Ages 42-45: Perimenopausal transition (allow 9 days variation)
  *
@@ -463,39 +471,43 @@ function getRegularityThreshold(userAge?: number): number {
  *
  * Classifications (Evidence-Based Clinical Standards):
  * - VERY_REGULAR: ≤4 days variation (±2 days from mean) [Ref 1]
- *   → Highest prediction accuracy (90-95%)
- *   → Indicates optimal HPO axis function
+ * → Highest prediction accuracy (90-95%)
+ * → Indicates optimal HPO axis function
  *
- * - REGULAR: 5-7 days variation (FIGO standard for ages 26-41) [Ref 1, 2]
- *   → Normal, healthy cycles
- *   → Prediction accuracy 80-90%
+ * - REGULAR: ≤ Threshold (Default 7, Adjusted 9) (FIGO standard) [Ref 1, 2]
+ * → Normal, healthy cycles
+ * → Prediction accuracy 80-90%
  *
- * - IRREGULAR: 8-19 days variation (needs monitoring) [Ref 6]
- *   → May indicate mild ovulatory dysfunction
- *   → Prediction accuracy 60-75%
+ * - IRREGULAR: Above Threshold to 19 days (needs monitoring) [Ref 6]
+ * → May indicate mild ovulatory dysfunction
+ * → Prediction accuracy 60-75%
  *
  * - HIGHLY_IRREGULAR: ≥20 days variation (FOGSI threshold) [Ref 7]
- *   → Medical evaluation recommended
- *   → Associated with 40% ↑ CVD risk [Ref 3]
- *   → Prediction accuracy 40-60%
+ * → Medical evaluation recommended
+ * → Associated with 40% ↑ CVD risk [Ref 3]
+ * → Prediction accuracy 40-60%
  *
  * @param variability - Cycle length variability: max - min (days), outlier-robust
+ * @param threshold - Age-adjusted threshold (default 7)
  * @returns Regularity classification enum value
  *
  * @internal This is an internal helper function, not exported
  */
-function classifyCycleRegularity(variability: number): CycleRegularityAnalysis['classification'] {
+function classifyCycleRegularity(
+  variability: number,
+  threshold: number = 7,
+): CycleRegularityAnalysis['classification'] {
   // VERY_REGULAR: ≤4 days variation (most predictable) [Ref 1]
   if (variability <= 4) {
     return 'VERY_REGULAR';
   }
 
-  // REGULAR: 5-7 days variation (FIGO standard) [Ref 1, 2]
-  if (variability <= 7) {
+  // REGULAR: ≤ Threshold (Dynamic based on age) [Ref 1, 2]
+  if (variability <= threshold) {
     return 'REGULAR';
   }
 
-  // IRREGULAR: 8-19 days variation (needs monitoring) [Ref 6]
+  // IRREGULAR: > Threshold but < 20 [Ref 6]
   if (variability < 20) {
     return 'IRREGULAR';
   }

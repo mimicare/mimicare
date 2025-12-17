@@ -7,9 +7,9 @@ import {
   Logger,
   ForbiddenException,
 } from '@nestjs/common';
-import { type ConfigService } from '@nestjs/config';
-import { type JwtService } from '@nestjs/jwt';
-import { type PrismaService } from '../../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CountryCode, OtpPurpose, UserRole } from '@mimicare/schema';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';

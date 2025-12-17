@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { type Request, type Response } from 'express';
-import { type V1AuthService } from './auth.service';
+import { V1AuthService } from './auth.service';
 import { type RegisterDto } from './dto/register.dto';
 import { type LoginDto } from './dto/login.dto';
 import { type ForgotPasswordDto } from './dto/forgot-password.dto';

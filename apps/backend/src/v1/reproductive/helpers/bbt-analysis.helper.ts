@@ -545,8 +545,13 @@ function classifyBBTPattern(
     return 'BIPHASIC';
   }
 
-  // ATYPICAL: Weak shift OR short luteal phase [Ref 5]
-  if (temperatureShift >= 0.1 && temperatureShift < REPRODUCTIVE_CONSTANTS.MIN_BBT_SHIFT_CELSIUS) {
+  // ATYPICAL:
+  // 1. Weak shift (0.1 - 0.2°C)
+  // 2. OR Strong shift (≥0.2°C) but Short Luteal Phase (<10 days)
+  if (
+    (temperatureShift >= 0.1 && temperatureShift < REPRODUCTIVE_CONSTANTS.MIN_BBT_SHIFT_CELSIUS) ||
+    (temperatureShift >= REPRODUCTIVE_CONSTANTS.MIN_BBT_SHIFT_CELSIUS && lutealLength < 10)
+  ) {
     return 'ATYPICAL';
   }
 

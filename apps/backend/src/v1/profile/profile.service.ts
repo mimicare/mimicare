@@ -9,7 +9,7 @@ import {
 import { ActivityType, CountryCode, Prisma, Gender, LifeStage } from '@mimicare/schema';
 import { type UpdateProfileDto, type ConfirmDeleteDto, UserProfileDto } from './dto';
 import { plainToInstance } from 'class-transformer';
-import { type PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * V1 Profile Service

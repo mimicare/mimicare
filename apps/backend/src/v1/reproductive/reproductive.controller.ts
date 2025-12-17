@@ -57,7 +57,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 
-import { type V1ReproductiveService } from './reproductive.service';
+import { V1ReproductiveService } from './reproductive.service';
 import { AccessTokenGuard } from '../../common/guards/auth';
 import { GetCurrentUserId } from '../../common/decorators/user';
 

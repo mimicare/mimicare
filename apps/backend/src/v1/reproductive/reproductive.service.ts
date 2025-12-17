@@ -23,7 +23,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { type PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import {
   startOfDay,
   endOfDay,
@@ -60,7 +60,11 @@ import {
   type CycleRegularityAnalysis,
 } from './helpers/cycle-regularity.helper';
 
-import { analyzeBBTPattern, type BBTAnalysis, type BBTReading } from './helpers/bbt-analysis.helper';
+import {
+  analyzeBBTPattern,
+  type BBTAnalysis,
+  type BBTReading,
+} from './helpers/bbt-analysis.helper';
 
 import { REPRODUCTIVE_CONSTANTS } from './constants/reproductive.constants';
 
